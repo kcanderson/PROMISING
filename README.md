@@ -1,0 +1,59 @@
+# PROMISING (PRioritization On Modules In Sets of Imaginable Non-intersecting genes)
+
+The PROMISING method finds promising leads in the candidate genesets created by genome-wide association studies. It proritizes the candidates based on their cohesiveness in an underlying protein-protein functional network under the assumption that the *actual* genes will be functionally similar. For example, the causal genes may operate in the same complex or engage in the same pathway.
+
+This is a work in progress. The method embedded in this code will be published soon.
+
+## Building
+
+From the top level directory, *make* should produce a binary in the "bin" folder.
+
+
+## Usage
+
+Required arguments:
+-n NETWORK_FILE: Network file for prioritization.
+-g GENESETS: Genesets to priortize.
+
+Optional arguments:
+-p PVAL_ITERATIONS
+-o OUTPUT_FILENAME
+
+An example network has been included in the "data" directory. A few example genesets are found in "data/examples".
+
+### Examples
+
+Trying out the example Fanconi Anemia geneset, 
+
+```
+./bin/promising -n data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.txt -o summary.txt
+```
+
+will produce the following output to stdout.
+
+```
+Output
+Top 10 genes
+Gene	Score
+----------------
+FANCI	0.546999
+FANCD2	0.526318
+FANCE	0.521776
+FANCF	0.502351
+FANCA	0.481958
+FANCC	0.48177
+PALB2	0.425826
+BRCA2	0.419089
+UBE2T	0.406832
+RP11-298P3.4	0.32322
+```
+
+It will also write a slighly longer summary to the file "summary.txt".
+
+
+## License
+
+Copyright © 2016 kca
+
+Distributed under the GNU public license version 3.
+
