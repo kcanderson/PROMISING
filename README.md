@@ -10,7 +10,14 @@ From the top level directory, *make* should produce a binary in the "bin" folder
 
 
 ## Usage
+```
+Brief USAGE: 
+   ./bin/promising  [-o <string>] [-p <int>] -g <string> -n <string> [--]
+                    [--version] [-h]
 
+```
+
+```
 Required arguments:
 -n NETWORK_FILE: Network file for prioritization.
 -g GENESETS: Genesets to priortize.
@@ -18,6 +25,7 @@ Required arguments:
 Optional arguments:
 -p PVAL_ITERATIONS
 -o OUTPUT_FILENAME
+```
 
 An example network has been included in the "data" directory. A few example genesets are found in "data/examples".
 
@@ -48,7 +56,18 @@ UBE2T	0.406832
 RP11-298P3.4	0.32322
 ```
 
+These top hits just happen to be the actual Fanconi Anemia causal genes. Huzzah!
+
 It will also write a slighly longer summary to the file "summary.txt".
+
+Genes can also be scored on an empirical p-value (see upcoming publication). To do so, use the -p flag with the number of iterations. For example,
+
+```
+./bin/promising -n data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.txt -o summary.txt -p 10000
+```
+
+will run the method 10,000 times with random sets of genes the same size as what was input. It will then calculate empirical p-values.
+
 
 
 ## License
