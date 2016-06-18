@@ -1,4 +1,4 @@
-# PROMISING (PRioritization On Modules In Sets of Implied Non-intersecting genes)
+# PROMISING (PRioritization On Modules In Sets of Implied Non-intersecting Genes)
 
 The PROMISING method finds promising leads in the candidate genesets created by genome-wide association studies. It proritizes the candidates based on their cohesiveness in an underlying protein-protein functional network under the assumption that the *actual* genes will be functionally similar. For example, the causal genes may operate in the same complex or engage in the same pathway.
 
@@ -23,8 +23,8 @@ Required arguments:
 -g GENESETS: Genesets to priortize.
 
 Optional arguments:
--p PVAL_ITERATIONS
--o OUTPUT_FILENAME
+-p PVAL_ITERATIONS: Calculate empirical p-values with given number of iterations.
+-o OUTPUT_FILENAME: Output a full list of genes with scores to the given file.
 ```
 
 An example network has been included in the "data" directory. A few example genesets are found in "data/examples".
