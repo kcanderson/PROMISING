@@ -81,25 +81,41 @@ bool pvalCompare(const std::pair<int, float>& firstElem, const std::pair<int, fl
   return firstElem.second < secondElem.second;
 }
 
+void calculateQValues(const TScoreMap& scores, TScoreMap& qvalScores) {
+  std::vector<std::pair<int, float> > pairs;
+  sortMapByVal(scores, pairs, pvalCompare);
+  
+  int n(scores.size());
+  for (auto const &e : pairs) {
+    qvalScores[e.first] = std::min(1.0f, e.second * n);
+    n--;
+  }
+}
+
 void PValueModuleScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap, std::ostream& out) const
 {
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(scores, pairs, pvalCompare);
+  TScoreMap qvalScores;
+  calculateQValues(scores, qvalScores);
   
-  out << std::endl << "Top 10 genes" << std::endl << "Gene\tP-value" << std::endl << "----------------" << std::endl;
+  out << std::endl << "Top 10 genes" << std::endl << "Gene\tP-value\tCorrected p-value" << std::endl << "----------------" << std::endl;
   int i = 0;
   for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
-    out << rmap[it->first] << "\t" << it->second << std::endl;
+    out << rmap[it->first] << "\t" << it->second << "\t" << qvalScores[it->first] << std::endl;
   }
 }
 
 void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const
 {
+  TScoreMap qvalScores;
+  calculateQValues(scores, qvalScores);
+ 
   int l = 1;
   for (auto const &g : groups) {
     out << "----------------" << std::endl;
     out << "Locus " << l << std::endl;
-    out << "Gene\tP-value" << std::endl;
+    out << "Gene\tP-value\tCorrected p-value" << std::endl;
     out << "----------------" << std::endl;
     TScoreMap locusScores;
     for (auto const &e : g) {
@@ -108,7 +124,7 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
     std::vector<std::pair<int, float> > pairs;
     sortMapByVal(locusScores, pairs, pvalCompare);
     for (auto const &e : pairs) {
-      out << rmap[e.first] << "\t" << e.second << std::endl;
+      out << rmap[e.first] << "\t" << e.second << "\t" << qvalScores[e.first] << std::endl;
     }
     l++;
   }
