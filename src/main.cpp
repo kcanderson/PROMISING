@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
 
     // Flatten out groups
     std::vector<std::string> entries;
-    flattenGroups(groups, entries);
+    flattenGroups<std::string>(groups, entries);
     const int numEntriesInGroups = entries.size();
 
     // Do we calculate a p-value?
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     }
 
     TIndicesGroups igroups;
-    mapGroupsToIndices(groups, map, igroups);
+    mapGroupsToIndices<std::string>(groups, map, igroups);
         
     // Score genes based on strong modules
     std::cout << "Scoring genes." << std::endl;

@@ -27,9 +27,45 @@ void shuffleGroups(const std::vector<int> groupSizes, std::vector<int>& allIndic
   }
 }
 
+void pullOutSubMatrix(const float* const similarities, const int width, std::vector<int>& indices, float* const newMatrix, std::map<int, int>& newIndexMap) {
+  // Sort indices from least to greatest
+  std::sort(indices.begin(), indices.end());
+  const int n = indices.size();
+  float* wcurr = newMatrix;
+  
+  // Pull out submatrix
+  for (auto i : indices) {
+    const float* curr = similarities + width * i;
+    int col = 0;
+    for (auto j : indices) {
+      wcurr[col++] = curr[j];
+    }
+    wcurr += n;
+  }
+
+  // Map new indices
+  int ii = 0;
+  for (auto i : indices) {
+    newIndexMap[i] = ii++;
+  }
+}
+
 bool PValueModuleScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, TScoreMap& scores) const
 {
   std::map<int, std::vector<float> > allScores;
+  int gind = 1;
+
+  int n = 0;
+  for (auto const &g : groups) {
+    n += g.size();
+  }
+
+  // Allocate buffer
+  float* const subMatrix = (float*)malloc(sizeof(float) * n * n);
+  if (subMatrix == 0) {
+    std::cerr << "Could not allocate buffer of " << sizeof(float) * n * n << " bytes" << std::endl;
+    exit(-1);
+  }
   
   for (auto const &g : groups) {
     std::vector<int> otherIndices;
@@ -47,15 +83,29 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     for (auto const &o : otherGroups) {
       groupSizes.push_back(o.size());
     }
+    
+    printf("Calculating p-values for locus %d / %d\n", gind++, (int)groups.size());
     for (int i = 0; i < mNumIterations; ++i) {
       //if (i % 1000 == 0) printf("Iteration %d complete.\n", i);
       TIndicesGroups shuffledGroups;
       shuffleGroups(groupSizes, otherIndices, shuffledGroups);
       shuffledGroups.push_back(g);
+
+      // Make temporary matrix-- this is good for cache locality. Much faster.
+      std::vector<int> flattenedIndices;
+      flattenGroups(shuffledGroups, flattenedIndices);
+      std::map<int, int> indexMap;
+      pullOutSubMatrix(similarities, width, flattenedIndices, subMatrix, indexMap);
+
+      // Map new indices
+      TIndicesGroups newGroups;
+      mapGroupsToIndices(shuffledGroups, indexMap, newGroups);
+      
       TScoreMap temp;
-      mScorer->ScoreModule(similarities, width, shuffledGroups, temp);
+      //mScorer->ScoreModule(similarities, width, shuffledGroups, temp);
+      mScorer->ScoreModule(subMatrix, n, newGroups, temp);
       for (auto i : g) {
-	allScores[i].push_back(temp[i]);
+	allScores[i].push_back(temp[indexMap[i]]);
       }
     }
   }
@@ -74,6 +124,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     scores[item.first] = ((float)numBetter / mNumIterations);
   }
 
+  free(subMatrix);
   return true;
 }
 

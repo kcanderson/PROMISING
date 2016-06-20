@@ -48,4 +48,25 @@ void sortMapByVal(const std::map<int, float>& map, std::vector<std::pair<int, fl
   std::sort(sorted.begin(), sorted.end(), comp);
 }
 
+template <typename T>
+void flattenGroups(const std::vector< std::vector<T> >& groups, std::vector<T>& entries)
+{
+  for (auto group : groups) {
+    entries.insert(entries.end(), group.begin(), group.end());
+  }
+}
+
+template <typename T>
+void mapGroupsToIndices(const std::vector< std::vector<T> >& groups, std::map<T, int>& map, TIndicesGroups& indicesGroups)
+{
+  for (auto const &g : groups) {
+    std::vector<int> inds;
+    for (auto const &e : g) {
+      if (map.find(e) != map.end()) {
+	inds.push_back(map[e]);
+      }
+    }
+    indicesGroups.push_back(inds);
+  }
+}
 #endif
