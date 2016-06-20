@@ -115,8 +115,11 @@ bool readEntriesFromNetwork(std::ifstream& matFile, TIndexMap& fullMap, const st
   // Add entries for new index mapping
   for (auto const &entry : entries) {
     if (fullMap.find(entry) != fullMap.end()) {
-      int v = newIndexMapping[fullMap[entry]];
-      newNameMap[entry] = v;
+      int v = fullMap[entry];
+      if (newIndexMapping.find(v) != newIndexMapping.end()) {
+	int vv = newIndexMapping[v];
+	newNameMap[entry] = vv;
+      }
     }
   }
   
