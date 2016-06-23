@@ -6,7 +6,7 @@ This is a work in progress. The method embedded in this code will be published s
 
 ## Building
 
-From the top level directory, *make* should produce a binary in the "bin" folder.
+From the top level directory, *make* should produce a binary in the "bin" folder. At the moment, this has only been tested on a Linux machine with gcc. 
 
 
 ## Usage
@@ -66,7 +66,7 @@ Genes can also be scored on an empirical p-value (see upcoming publication). To 
 ./bin/promising -n data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.txt -o summary.txt -p 10000
 ```
 
-will run the method 10,000 times with random sets of genes the same size as what was input. It will then calculate empirical p-values.
+will run the method 10,000 times with random sets of genes the same size as what was input. It will then calculate empirical p-values. It will also report adjusted p-values using the Bonferroni method to control for the FWER.
 
 
 

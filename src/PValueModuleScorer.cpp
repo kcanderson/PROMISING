@@ -13,6 +13,7 @@
 #include "coreroutines.h"
 #include <algorithm>
 #include <math.h>
+#include <ctime>
 
 void shuffleGroups(const std::vector<int> groupSizes, std::vector<int>& allIndices, TIndicesGroups& shuffledGroups) {
   std::random_shuffle(allIndices.begin(), allIndices.end());
@@ -58,6 +59,9 @@ float calculateZScore(const std::vector<float>& nullScores, const float actualSc
 
 bool PValueModuleScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, TScoreMap& scores) const
 {
+  // Seed the random number generator.
+  std::srand(std::time(0));
+    
   std::map<int, std::vector<float> > allScores;
   int gind = 1;
 
@@ -150,14 +154,26 @@ void calculatePValues(const TScoreMap& scores, TScoreMap& pvalScores) {
   }
 }
 
-void calculateQValues(const TScoreMap& pvals, TScoreMap& qvalScores) {
+
+void benjaminiHochbergCorrection(const TScoreMap& pvals, TScoreMap& pvalAdjusted) {
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(pvals, pairs, pvalCompare);
   
-  int n(pvals.size());
+  int n(pairs.size());
+  int k = 1;
   for (auto const &e : pairs) {
-    qvalScores[e.first] = std::min(1.0f, e.second * n);
-    n--;
+    pvalAdjusted[e.first] = std::min(1.0f, e.second * (float)n / (float)k);
+    k++;
+  }
+}
+
+void bonferroniCorrection(const TScoreMap& pvals, TScoreMap& pvalAdjusted) {
+  std::vector<std::pair<int, float> > pairs;
+  sortMapByVal(pvals, pairs, pvalCompare);
+  
+  int n(pairs.size());
+  for (auto const &e : pairs) {
+    pvalAdjusted[e.first] = std::min(1.0f, e.second * (float)n);
   }
 }
 
@@ -165,28 +181,30 @@ void PValueModuleScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap,
 {
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(scores, pairs, zscoreCompare);
-  TScoreMap pvals, qvalScores;
+  TScoreMap pvals, pvalsAdjusted;
   calculatePValues(scores, pvals);
-  calculateQValues(pvals, qvalScores);
+  //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
+  bonferroniCorrection(pvals, pvalsAdjusted);
   
-  out << std::endl << "Top 10 genes" << std::endl << "Gene\tZ score\tP value\tCorrected p value" << std::endl << "----------------" << std::endl;
+  out << std::endl << "Top 10 genes" << std::endl << "Gene\tZ score\tP value\tAdj. p value" << std::endl << "----------------" << std::endl;
   int i = 0;
   for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
-    out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << qvalScores[it->first] << std::endl;
+    out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
   }
 }
 
 void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const
 {
-  TScoreMap pvals, qvalScores;
+  TScoreMap pvals, pvalsAdjusted;
   calculatePValues(scores, pvals);
-  calculateQValues(pvals, qvalScores);
+  //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
+  bonferroniCorrection(pvals, pvalsAdjusted);
  
   int l = 1;
   for (auto const &g : groups) {
     out << "----------------" << std::endl;
     out << "Locus " << l << std::endl;
-    out << "Gene\tZ score\tP value\tCorrected p value" << std::endl;
+    out << "Gene\tZ score\tP value\tAdj. p value" << std::endl;
     out << "----------------" << std::endl;
     TScoreMap locusScores;
     for (auto const &e : g) {
@@ -195,7 +213,7 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
     std::vector<std::pair<int, float> > pairs;
     sortMapByVal(locusScores, pairs, zscoreCompare);
     for (auto const &e : pairs) {
-      out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << qvalScores[e.first] << std::endl;
+      out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
     }
     l++;
   }
