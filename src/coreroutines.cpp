@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 
 // trim from start
 static inline std::string &ltrim(std::string &s) {
@@ -83,6 +84,7 @@ bool readEntriesFromNetwork(std::ifstream& matFile, TIndexMap& fullMap, const st
 
   float* curr_mat(mat);
   std::sort(indices.begin(), indices.end());
+  indices.erase(std::unique(indices.begin(), indices.end()), indices.end());
   std::vector<int>::const_iterator itrow = indices.begin();
   std::map<int, int> newIndexMapping;
   int row = 0, ii = 0, nextRow = *itrow;
@@ -181,3 +183,28 @@ void printMatrix(const float* buffer, const int rows, const int cols) {
     v += cols;
   }
 }
+
+float phi(float x)
+{
+  // constants
+  float a1 =  0.254829592;
+  float a2 = -0.284496736;
+  float a3 =  1.421413741;
+  float a4 = -1.453152027;
+  float a5 =  1.061405429;
+  float p  =  0.3275911;
+
+  // Save the sign of x
+  int sign = 1;
+  if (x < 0)
+    sign = -1;
+  x = fabs(x)/sqrt(2.0);
+
+  // A&S formula 7.1.26
+  float t = 1.0/(1.0 + p*x);
+  float y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x);
+
+  return 0.5*(1.0 + sign*y);
+}
+
+

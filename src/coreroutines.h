@@ -30,6 +30,7 @@ bool readGroups(std::ifstream& groupFile, TGroups& groups);
 void flattenGroups(const TGroups& groups, std::vector<std::string>& entries);
 void mapGroupsToIndices(const TGroups& groups, TIndexMap& map, TIndicesGroups& indicesGroups);
 void printMatrix(const float* buffer, const int rows, const int cols);
+float phi(float x);
 
 template <typename T> void printGroups(const std::vector< std::vector<T> >& groups) {
   for (auto const &g : groups) {
@@ -69,4 +70,33 @@ void mapGroupsToIndices(const std::vector< std::vector<T> >& groups, std::map<T,
     indicesGroups.push_back(inds);
   }
 }
+
+
+template <typename T>
+T sum(const std::vector<T>& items) {
+  typename std::vector<T>::const_iterator it = items.begin();
+  T acc = *it++;
+  for (; it != items.end(); it++) {
+    acc += *it;
+  }
+  return acc;
+}
+
+template <typename T>
+T mean(const std::vector<T>& items) {
+  return sum(items) / items.size();
+}
+
+template <typename T>
+T variance(const std::vector<T>& items) {
+  T m = mean(items);
+  typename std::vector<T>::const_iterator it = items.begin();
+  T acc = *it++;
+  for (; it != items.end(); it++) {
+    T v = (*it - m);
+    acc += (v * v);
+  }
+  return acc / (items.size() - 1);
+}
+
 #endif
