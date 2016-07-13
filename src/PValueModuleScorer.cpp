@@ -82,7 +82,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     for (int i = 0; i < width; ++i) {
       otherIndices.push_back(i);
     }
-    for (auto i : g) {
+    for (auto const i : g) {
       auto it = std::find(otherIndices.begin(), otherIndices.end(), i);
       otherIndices.erase(it);
     }
@@ -114,7 +114,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
       TScoreMap temp;
       //mScorer->ScoreModule(similarities, width, shuffledGroups, temp);
       mScorer->ScoreModule(subMatrix, n, newGroups, temp);
-      for (auto i : g) {
+      for (auto const i : g) {
 	allScores[i].push_back(temp[indexMap[i]]);
       }
     }
@@ -124,16 +124,15 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
   mScorer->ScoreModule(similarities, width, groups, real);
   for (auto const &item : allScores) {
     float myScore(real[item.first]);
-    //int numBetter(0);
+    int numBetter(0);
     
-    // for (auto i : item.second) {
-    //   if (i > myScore) {
-    // 	numBetter++;
-    //   }
-    // }
-    // scores[item.first] = ((float)numBetter / mNumIterations);
-
-    scores[item.first] = calculateZScore(item.second, myScore);
+    for (auto const i : item.second) {
+      if (i > myScore) {
+    	numBetter++;
+      }
+    }
+    scores[item.first] = ((float)numBetter / mNumIterations);
+    //scores[item.first] = calculateZScore(item.second, myScore);
   }
 
   free(subMatrix);
@@ -180,25 +179,31 @@ void bonferroniCorrection(const TScoreMap& pvals, TScoreMap& pvalAdjusted) {
 void PValueModuleScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap, std::ostream& out) const
 {
   std::vector<std::pair<int, float> > pairs;
-  sortMapByVal(scores, pairs, zscoreCompare);
-  TScoreMap pvals, pvalsAdjusted;
-  calculatePValues(scores, pvals);
+  //sortMapByVal(scores, pairs, zscoreCompare);
+  sortMapByVal(scores, pairs, pvalCompare);
+  //TScoreMap pvals, pvalsAdjusted;
+  TScoreMap pvalsAdjusted;
+  //calculatePValues(scores, pvals);
   //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
-  bonferroniCorrection(pvals, pvalsAdjusted);
+  //bonferroniCorrection(pvals, pvalsAdjusted);
+  bonferroniCorrection(scores, pvalsAdjusted);
   
   out << std::endl << "Top 10 genes" << std::endl << "Gene\tZ score\tP value\tAdj. p value" << std::endl << "----------------" << std::endl;
   int i = 0;
   for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
-    out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
+    //out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
+    out << rmap[it->first] << "\t" << it->second << "\t" << scores[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
   }
 }
 
 void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const
 {
-  TScoreMap pvals, pvalsAdjusted;
-  calculatePValues(scores, pvals);
+  TScoreMap pvalsAdjusted;
+  //TScoreMap pvals, pvalsAdjusted;
+  //calculatePValues(scores, pvals);
   //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
-  bonferroniCorrection(pvals, pvalsAdjusted);
+  //bonferroniCorrection(pvals, pvalsAdjusted);
+  bonferroniCorrection(scores, pvalsAdjusted);
  
   int l = 1;
   for (auto const &g : groups) {
@@ -211,9 +216,11 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
       locusScores[e] = scores[e];
     }
     std::vector<std::pair<int, float> > pairs;
-    sortMapByVal(locusScores, pairs, zscoreCompare);
+    //sortMapByVal(locusScores, pairs, zscoreCompare);
+    sortMapByVal(locusScores, pairs, pvalCompare);
     for (auto const &e : pairs) {
-      out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+      //out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+      out << rmap[e.first] << "\t" << e.second << "\t" << scores[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
     }
     l++;
   }
