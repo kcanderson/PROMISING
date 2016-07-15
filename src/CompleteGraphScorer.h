@@ -19,3 +19,12 @@ public:
   void BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap, std::ostream& out) const;
   void LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const;
 };
+
+class CompleteGraphScorer4 : public CompleteGraphScorer {
+public:
+  CompleteGraphScorer4(void) {}
+  bool ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups,
+		   TScoreMap& scores) const;
+  //void BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap, std::ostream& out) const;
+  //void LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const;
+};

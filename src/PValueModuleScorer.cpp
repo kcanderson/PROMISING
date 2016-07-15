@@ -57,6 +57,10 @@ float calculateZScore(const std::vector<float>& nullScores, const float actualSc
   return zscore;
 }
 
+void populateNullDistribution(const int numIterations, std::vector<float>& values) {
+
+}
+
 bool PValueModuleScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, TScoreMap& scores) const
 {
   // Seed the random number generator.
