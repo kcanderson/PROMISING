@@ -98,9 +98,9 @@ void CompleteGraphScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(scores, pairs, scoreCompare);
   
-  out << std::endl << "Top 50 genes" << std::endl << "Gene\tScore" << std::endl << "----------------" << std::endl;
+  out << std::endl << "Top 10 genes" << std::endl << "Gene\tScore" << std::endl << "----------------" << std::endl;
   int i = 0;
-  for (auto it = pairs.begin(); it != pairs.end() && i < 50; it++, i++) {
+  for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
     out << rmap[it->first] << "\t" << it->second << std::endl;
   }
 }
