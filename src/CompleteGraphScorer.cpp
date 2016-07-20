@@ -145,7 +145,7 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
     intermediateScores[i] = 0.0f;
   }
 
-  //printf("Starting complete graph 4 scoring.\n");
+  printf("Starting complete graph 4 scoring.\n");
   
   const int gsize = 4;
   const int numGroups = groups.size();
@@ -200,7 +200,7 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
     }
   }
 
-  //printf("Finishing complete graph 4 scoring.\n");
+  printf("Finishing complete graph 4 scoring.\n");
   
   free(rawScores);
   free(intermediateScores);

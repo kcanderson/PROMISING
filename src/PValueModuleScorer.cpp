@@ -236,8 +236,8 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
       locusScores[e] = scores[e];
     }
     std::vector<std::pair<int, float> > pairs;
-    //sortMapByVal(locusScores, pairs, zscoreCompare);
-    sortMapByVal(locusScores, pairs, pvalCompare);
+    sortMapByVal(locusScores, pairs, zscoreCompare);
+    //sortMapByVal(locusScores, pairs, pvalCompare);
     for (auto const &e : pairs) {
       out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
       //out << rmap[e.first] << "\t" << e.second << "\t" << scores[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
