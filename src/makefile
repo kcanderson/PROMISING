@@ -1,6 +1,6 @@
 
 CC = g++
-CFLAGS = -g -Wall -std=c++11 -O3
+CFLAGS = -g -Wall -std=c++11 -march=native -O3 -ffast-math 
 
 all: main.o completegraphscorer.o coreroutines.o pvaluescorer.o
 	$(CC) $(CFLAGS) -o promising main.o completegraphscorer.o coreroutines.o pvaluescorer.o

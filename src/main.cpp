@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     
     if (pIterations == -1) {
       // Just score the nodes. No p-value calculation.
-      moduleScorer = new CompleteGraphScorer4();
+      moduleScorer = new CompleteGraphScorer();
       matrixWidth = numEntriesInGroups;
       
       // Allocate memory for subnework
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     else if (pIterations > 0) {
       // We need to calculate empirical p-values.
       // PValueModulesScorer will take ownership of the complete graph scorer.
-      moduleScorer = new PValueModuleScorer(pIterations, new CompleteGraphScorer4());
+      moduleScorer = new PValueModuleScorer(pIterations, new CompleteGraphScorer());
       matrixWidth = numNodes;
       map = fullMap;
       std::cout << "Reading entire network into memory. This may take a while." << std::endl;

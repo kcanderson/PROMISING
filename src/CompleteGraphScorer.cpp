@@ -12,6 +12,7 @@
 #include "CompleteGraphScorer.h"
 #include "coreroutines.h"
 #include "string.h"
+#include "mmintrin.h"
 #include <algorithm>
 
 typedef std::vector<int> TInts;
@@ -98,9 +99,9 @@ void CompleteGraphScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(scores, pairs, scoreCompare);
   
-  out << std::endl << "Top 10 genes" << std::endl << "Gene\tScore" << std::endl << "----------------" << std::endl;
+  out << std::endl << "Top 50 genes" << std::endl << "Gene\tScore" << std::endl << "----------------" << std::endl;
   int i = 0;
-  for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
+  for (auto it = pairs.begin(); it != pairs.end() && i < 50; it++, i++) {
     out << rmap[it->first] << "\t" << it->second << std::endl;
   }
 }
@@ -177,10 +178,22 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
 		  // i3 - i4
 		  acc += *(r3 + i4);
 		  
+#define VECTORIZED 0
+#if VECTORIZED
+		  // Load four copies of value into 128 bit register
+		  __m128 vals = _mm_set1_ps(acc);
+		  // Load four intermediateScores into 128 bit register
+
+		  // Compare
+
+		  
+#else
 		  if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
 		  if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
 		  if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
 		  if (acc > intermediateScores[i4]) intermediateScores[i4] = acc;
+#endif
+		  
 		}
 	      }
 	    }
