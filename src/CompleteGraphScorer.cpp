@@ -12,7 +12,6 @@
 #include "CompleteGraphScorer.h"
 #include "coreroutines.h"
 #include "string.h"
-#include "mmintrin.h"
 #include <algorithm>
 
 typedef std::vector<int> TInts;
@@ -59,16 +58,40 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
 	    const float* r2 = similarities + width * i2;
 	    const float v12 = *(r1 + i2);
 	    for (const auto i3 : g3) {
-	      // i1 - i2
-	      float acc = v12;
-	      // i1 - i3
-	      acc += *(r1 + i3);
-	      // i2 - i3
-	      acc += *(r2 + i3);
+	      const float v13 = *(r1 + i3);
+	      const float v23 = *(r2 + i3);
 
+	      // Score i1
+	      float acc = v12 + v13;
+	      //float mx = (v12 > v13) ? v12 : v13;
+	      float mn = (v12 < v13) ? v12 : v13;
+	      acc += (v23 > mn) ? mn : v23;
 	      if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
+
+	      // Score i2
+	      acc = v12 + v23;
+	      //mx = (v12 > v23) ? v12 : v23;
+	      mn = (v12 < v23) ? v12 : v23;
+	      acc += (v13 > mn) ? mn : v13;
 	      if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
+
+	      // Score i3
+	      acc = v13 + v23;
+	      //mx = (v13 > v23) ? v13 : v23;
+	      mn = (v13 < v23) ? v13 : v23;
+	      acc += (v12 > mn) ? mn : v12;
 	      if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
+	      
+	      // // i1 - i2
+	      // float acc = v12;
+	      // // i1 - i3
+	      // acc += *(r1 + i3);
+	      // // i2 - i3
+	      // acc += *(r2 + i3);
+
+	      // if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
+	      // if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
+	      // if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
 	    }
 	  }
 	}
@@ -99,9 +122,9 @@ void CompleteGraphScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(scores, pairs, scoreCompare);
   
-  out << std::endl << "Top 50 genes" << std::endl << "Gene\tScore" << std::endl << "----------------" << std::endl;
+  out << std::endl << "Top 10 genes" << std::endl << "Gene\tScore" << std::endl << "----------------" << std::endl;
   int i = 0;
-  for (auto it = pairs.begin(); it != pairs.end() && i < 50; it++, i++) {
+  for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
     out << rmap[it->first] << "\t" << it->second << std::endl;
   }
 }
@@ -146,7 +169,7 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
     intermediateScores[i] = 0.0f;
   }
 
-  //printf("Starting complete graph 4 scoring.\n");
+  printf("Starting complete graph 4 scoring.\n");
   
   const int gsize = 4;
   const int numGroups = groups.size();
@@ -178,22 +201,10 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
 		  // i3 - i4
 		  acc += *(r3 + i4);
 		  
-#define VECTORIZED 0
-#if VECTORIZED
-		  // Load four copies of value into 128 bit register
-		  __m128 vals = _mm_set1_ps(acc);
-		  // Load four intermediateScores into 128 bit register
-
-		  // Compare
-
-		  
-#else
 		  if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
 		  if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
 		  if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
 		  if (acc > intermediateScores[i4]) intermediateScores[i4] = acc;
-#endif
-		  
 		}
 	      }
 	    }
@@ -213,7 +224,7 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
     }
   }
 
-  //printf("Finishing complete graph 4 scoring.\n");
+  printf("Finishing complete graph 4 scoring.\n");
   
   free(rawScores);
   free(intermediateScores);

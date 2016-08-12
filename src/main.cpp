@@ -16,6 +16,9 @@ int main(int argc, char** argv) {
     cmd.add(pvalIterations);
     TCLAP::ValueArg<std::string> outFilename("o", "outfile", "Output summary file", false, "", "string");
     cmd.add(outFilename);
+    TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
+    cmd.add(cGroupSize);
+    
     // Read in command-line options.
     cmd.parse(argc, argv);
 
@@ -30,9 +33,15 @@ int main(int argc, char** argv) {
     flattenGroups<std::string>(groups, entries);
     const int numEntriesInGroups = entries.size();
 
+    int cgraphSize = cGroupSize.getValue();
+    if (cgraphSize != 3 && cgraphSize != 4) {
+      printf("Inappropriate complete graph size, %d. Only accept 3 or 4.", cgraphSize);
+      exit(-1);
+    }
+
     // Do we calculate a p-value?
     int pIterations = pvalIterations.getValue();
-    
+
     // Get network filename
     std::string nfilename = netFilename.getValue();
     std::ifstream ninfile(nfilename);
@@ -47,10 +56,16 @@ int main(int argc, char** argv) {
     float* mat(0);
     int matrixWidth(0);
     IModuleScorer* moduleScorer(0);
+    if (cgraphSize == 4) {
+      moduleScorer = new CompleteGraphScorer4();
+    }
+    else {
+      moduleScorer = new CompleteGraphScorer();
+    }
     
     if (pIterations == -1) {
       // Just score the nodes. No p-value calculation.
-      moduleScorer = new CompleteGraphScorer();
+      //moduleScorer = new CompleteGraphScorer4();
       matrixWidth = numEntriesInGroups;
       
       // Allocate memory for subnework
@@ -68,7 +83,7 @@ int main(int argc, char** argv) {
     else if (pIterations > 0) {
       // We need to calculate empirical p-values.
       // PValueModulesScorer will take ownership of the complete graph scorer.
-      moduleScorer = new PValueModuleScorer(pIterations, new CompleteGraphScorer());
+      moduleScorer = new PValueModuleScorer(pIterations, moduleScorer);
       matrixWidth = numNodes;
       map = fullMap;
       std::cout << "Reading entire network into memory. This may take a while." << std::endl;

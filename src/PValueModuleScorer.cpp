@@ -15,15 +15,50 @@
 #include <math.h>
 #include <ctime>
 
-void shuffleGroups(const std::vector<int> groupSizes, std::vector<int>& allIndices, TIndicesGroups& shuffledGroups) {
-  std::random_shuffle(allIndices.begin(), allIndices.end());
-  std::vector<int>::const_iterator it(allIndices.begin());
+// void shuffleGroups(const std::vector<int> groupSizes, std::vector<int>& allIndices, TIndicesGroups& shuffledGroups) {
+//   std::random_shuffle(allIndices.begin(), allIndices.end());
+//   std::vector<int>::const_iterator it(allIndices.begin());
   
-  for (auto size : groupSizes) {
+//   for (auto size : groupSizes) {
+//     std::vector<int> newGroup;
+//     for (int i = 0; i < size && it != allIndices.end(); ++i, it++) {
+//       int item(*it);
+//       newGroup.push_back(item);
+//     }
+//     shuffledGroups.push_back(newGroup);
+//   }
+// }
+
+void degreeMatrix(const float* const similarities, const int width, std::map<int, float>& degree) {
+  for (int i = 0; i < width; ++i) {
+    const float* ptr = similarities + i * width;
+    float acc = 0;
+    for (int j = 0; j < width; ++j) {
+      acc += ptr[j];
+    }
+    degree[i] = acc;
+  }
+}
+
+void shuffleGroups(const float* const similarities, const int width, const std::vector<std::vector<int> > otherGroups, const std::vector<int>& allIndices, std::map<int, float>& degrees, TIndicesGroups& shuffledGroups) {
+  const int n = allIndices.size();
+  for (auto const& group : otherGroups) {
     std::vector<int> newGroup;
-    for (int i = 0; i < size && it != allIndices.end(); ++i, it++) {
-      int item(*it);
-      newGroup.push_back(item);
+    for (auto i : group) {
+      const float myDegree = degrees[i];
+      int bestIndex = 0;
+      float bestDiff = 1e100;
+      int v = rand() % n;
+      for (int vv = 0; vv < 200; ++vv, ++v) {
+	const int newIndex = allIndices[v % n];
+	const float newDegree = degrees[newIndex];
+	if (fabsf(newDegree - myDegree) < bestDiff) {
+	  bestDiff = fabsf(newDegree - myDegree);
+	  bestIndex = newIndex;
+	}
+      }
+      //printf("A: %e, B: %e, Difference: %e\n", myDegree, degrees[bestIndex], bestDiff);
+      newGroup.push_back(bestIndex);
     }
     shuffledGroups.push_back(newGroup);
   }
@@ -74,6 +109,9 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     n += g.size();
   }
 
+  std::map<int, float> degrees;
+  degreeMatrix(similarities, width, degrees);
+
   // Allocate buffer
   float* const subMatrix = (float*)malloc(sizeof(float) * n * n);
   if (subMatrix == 0) {
@@ -99,11 +137,29 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     }
     
     printf("Calculating p-values for locus %d / %d\n", gind++, (int)groups.size());
+
+    // ** Pseudo-randomly choose guys in loci. **
+    // [1] Randomly choose starting point
+    //int startingPoint = rand() % otherIndices.size();
     for (int i = 0; i < mNumIterations; ++i) {
       //if (i % 1000 == 0) printf("Iteration %d complete.\n", i);
       TIndicesGroups shuffledGroups;
-      shuffleGroups(groupSizes, otherIndices, shuffledGroups);
+      //shuffleGroups(groupSizes, otherIndices, shuffledGroups);
+      shuffleGroups(similarities, width, otherGroups, otherIndices, degrees, shuffledGroups);
       shuffledGroups.push_back(g);
+      // int curr = startingPoint;
+      // for (auto const s : groupSizes) {
+      // 	std::vector<int> newGroup;
+      // 	for (int v = 0; v < s; ++v) {
+      // 	  const int me = curr % otherIndices.size();
+      // 	  newGroup.push_back(otherIndices[me]);
+      // 	  curr++;
+      // 	}
+      // 	shuffledGroups.push_back(newGroup);
+      // }
+      // shuffledGroups.push_back(g);
+      // startingPoint += (otherIndices.size() - 19);
+      // startingPoint %= otherIndices.size();
 
       // Make temporary matrix-- this is good for cache locality. Much faster.
       std::vector<int> flattenedIndices;
@@ -129,14 +185,13 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
   for (auto const &item : allScores) {
     float myScore(real[item.first]);
     int numBetter(0);
-    
     for (auto const i : item.second) {
       if (i > myScore) {
     	numBetter++;
       }
     }
-    //scores[item.first] = ((float)numBetter / mNumIterations);
-    scores[item.first] = calculateZScore(item.second, myScore);
+    scores[item.first] = ((float)numBetter / mNumIterations);
+    //scores[item.first] = calculateZScore(item.second, myScore);
   }
 
   free(subMatrix);
@@ -183,31 +238,31 @@ void bonferroniCorrection(const TScoreMap& pvals, TScoreMap& pvalAdjusted) {
 void PValueModuleScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap, std::ostream& out) const
 {
   std::vector<std::pair<int, float> > pairs;
-  sortMapByVal(scores, pairs, zscoreCompare);
-  //sortMapByVal(scores, pairs, pvalCompare);
-  TScoreMap pvals, pvalsAdjusted;
-  //TScoreMap pvalsAdjusted;
-  calculatePValues(scores, pvals);
+  //sortMapByVal(scores, pairs, zscoreCompare);
+  sortMapByVal(scores, pairs, pvalCompare);
+  //TScoreMap pvals, pvalsAdjusted;
+  TScoreMap pvalsAdjusted;
+  //calculatePValues(scores, pvals);
   //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
-  bonferroniCorrection(pvals, pvalsAdjusted);
-  //bonferroniCorrection(scores, pvalsAdjusted);
+  //bonferroniCorrection(pvals, pvalsAdjusted);
+  bonferroniCorrection(scores, pvalsAdjusted);
   
   out << std::endl << "Top 10 genes" << std::endl << "Gene\tZ score\tP value\tAdj. p value" << std::endl << "----------------" << std::endl;
   int i = 0;
   for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
-    out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
-    //out << rmap[it->first] << "\t" << it->second << "\t" << scores[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
+    //out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
+    out << rmap[it->first] << "\t" << it->second << "\t" << scores[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
   }
 }
 
 void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const
 {
-  //TScoreMap pvalsAdjusted;
-  TScoreMap pvals, pvalsAdjusted;
-  calculatePValues(scores, pvals);
+  TScoreMap pvalsAdjusted;
+  //TScoreMap pvals, pvalsAdjusted;
+  //calculatePValues(scores, pvals);
   //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
-  bonferroniCorrection(pvals, pvalsAdjusted);
-  //bonferroniCorrection(scores, pvalsAdjusted);
+  //bonferroniCorrection(pvals, pvalsAdjusted);
+  bonferroniCorrection(scores, pvalsAdjusted);
  
   int l = 1;
   for (auto const &g : groups) {
@@ -220,11 +275,11 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
       locusScores[e] = scores[e];
     }
     std::vector<std::pair<int, float> > pairs;
-    sortMapByVal(locusScores, pairs, zscoreCompare);
-    //sortMapByVal(locusScores, pairs, pvalCompare);
+    //sortMapByVal(locusScores, pairs, zscoreCompare);
+    sortMapByVal(locusScores, pairs, pvalCompare);
     for (auto const &e : pairs) {
-      out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
-      //out << rmap[e.first] << "\t" << e.second << "\t" << scores[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+      //out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+      out << rmap[e.first] << "\t" << e.second << "\t" << scores[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
     }
     l++;
   }
