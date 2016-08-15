@@ -6,8 +6,13 @@ This is a work in progress. The method embedded in this code will be published s
 
 ## Building
 
-From the top level directory, *make* should produce a binary in the "bin" folder. At the moment, this has only been tested on a Linux machine with gcc. 
+The promising binary can be built with the standard configure/make process.
 
+./configure
+make
+
+
+At the moment, this has only been tested on a Linux machine with gcc. 
 
 ## Usage
 ```

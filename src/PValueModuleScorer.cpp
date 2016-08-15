@@ -247,11 +247,12 @@ void PValueModuleScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap,
   //bonferroniCorrection(pvals, pvalsAdjusted);
   bonferroniCorrection(scores, pvalsAdjusted);
   
-  out << std::endl << "Top 10 genes" << std::endl << "Gene\tZ score\tP value\tAdj. p value" << std::endl << "----------------" << std::endl;
+  //out << std::endl << "Top 10 genes" << std::endl << "Gene\tZ score\tP value\tAdj. p value" << std::endl << "----------------" << std::endl;
+  out << std::endl << "Top 10 genes" << std::endl << "Gene\tP value\tAdj. p value" << std::endl << "----------------" << std::endl;
   int i = 0;
   for (auto it = pairs.begin(); it != pairs.end() && i < 10; it++, i++) {
     //out << rmap[it->first] << "\t" << it->second << "\t" << pvals[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
-    out << rmap[it->first] << "\t" << it->second << "\t" << scores[it->first] << "\t" << pvalsAdjusted[it->first] << std::endl;
+    out << rmap[it->first] << "\t" << it->second << "\t" << pvalsAdjusted[it->first] << std::endl;
   }
 }
 
@@ -268,7 +269,8 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
   for (auto const &g : groups) {
     out << "----------------" << std::endl;
     out << "Locus " << l << std::endl;
-    out << "Gene\tZ score\tP value\tAdj. p value" << std::endl;
+    //out << "Gene\tZ score\tP value\tAdj. p value" << std::endl;
+    out << "Gene\tP value\tAdj. p value" << std::endl;
     out << "----------------" << std::endl;
     TScoreMap locusScores;
     for (auto const &e : g) {
@@ -279,7 +281,7 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
     sortMapByVal(locusScores, pairs, pvalCompare);
     for (auto const &e : pairs) {
       //out << rmap[e.first] << "\t" << e.second << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
-      out << rmap[e.first] << "\t" << e.second << "\t" << scores[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+      out << rmap[e.first] << "\t" << e.second << "\t" << pvalsAdjusted[e.first] << std::endl;
     }
     l++;
   }
