@@ -8,9 +8,10 @@ This is a work in progress. The method embedded in this code will be published s
 
 The promising binary can be built with the standard configure/make process.
 
+```
 ./configure
 make
-
+```
 
 At the moment, this has only been tested on a Linux machine with gcc. 
 
