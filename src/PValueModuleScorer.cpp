@@ -15,54 +15,54 @@
 #include <math.h>
 #include <ctime>
 
-// void shuffleGroups(const std::vector<int> groupSizes, std::vector<int>& allIndices, TIndicesGroups& shuffledGroups) {
-//   std::random_shuffle(allIndices.begin(), allIndices.end());
-//   std::vector<int>::const_iterator it(allIndices.begin());
+void shuffleGroups(const std::vector<int> groupSizes, std::vector<int>& allIndices, TIndicesGroups& shuffledGroups) {
+  std::random_shuffle(allIndices.begin(), allIndices.end());
+  std::vector<int>::const_iterator it(allIndices.begin());
   
-//   for (auto size : groupSizes) {
-//     std::vector<int> newGroup;
-//     for (int i = 0; i < size && it != allIndices.end(); ++i, it++) {
-//       int item(*it);
-//       newGroup.push_back(item);
-//     }
-//     shuffledGroups.push_back(newGroup);
-//   }
-// }
-
-void degreeMatrix(const float* const similarities, const int width, std::map<int, float>& degree) {
-  for (int i = 0; i < width; ++i) {
-    const float* ptr = similarities + i * width;
-    float acc = 0;
-    for (int j = 0; j < width; ++j) {
-      acc += ptr[j];
-    }
-    degree[i] = acc;
-  }
-}
-
-void shuffleGroups(const float* const similarities, const int width, const std::vector<std::vector<int> > otherGroups, const std::vector<int>& allIndices, std::map<int, float>& degrees, TIndicesGroups& shuffledGroups) {
-  const int n = allIndices.size();
-  for (auto const& group : otherGroups) {
+  for (auto size : groupSizes) {
     std::vector<int> newGroup;
-    for (auto i : group) {
-      const float myDegree = degrees[i];
-      int bestIndex = 0;
-      float bestDiff = 1e100;
-      int v = rand() % n;
-      for (int vv = 0; vv < 200; ++vv, ++v) {
-	const int newIndex = allIndices[v % n];
-	const float newDegree = degrees[newIndex];
-	if (fabsf(newDegree - myDegree) < bestDiff) {
-	  bestDiff = fabsf(newDegree - myDegree);
-	  bestIndex = newIndex;
-	}
-      }
-      //printf("A: %e, B: %e, Difference: %e\n", myDegree, degrees[bestIndex], bestDiff);
-      newGroup.push_back(bestIndex);
+    for (int i = 0; i < size && it != allIndices.end(); ++i, it++) {
+      int item(*it);
+      newGroup.push_back(item);
     }
     shuffledGroups.push_back(newGroup);
   }
 }
+
+// void degreeMatrix(const float* const similarities, const int width, std::map<int, float>& degree) {
+//   for (int i = 0; i < width; ++i) {
+//     const float* ptr = similarities + i * width;
+//     float acc = 0;
+//     for (int j = 0; j < width; ++j) {
+//       acc += ptr[j];
+//     }
+//     degree[i] = acc;
+//   }
+// }
+
+// void shuffleGroups(const float* const similarities, const int width, const std::vector<std::vector<int> > otherGroups, const std::vector<int>& allIndices, std::map<int, float>& degrees, TIndicesGroups& shuffledGroups) {
+//   const int n = allIndices.size();
+//   for (auto const& group : otherGroups) {
+//     std::vector<int> newGroup;
+//     for (auto i : group) {
+//       const float myDegree = degrees[i];
+//       int bestIndex = 0;
+//       float bestDiff = 1e100;
+//       int v = rand() % n;
+//       for (int vv = 0; vv < 200; ++vv, ++v) {
+// 	const int newIndex = allIndices[v % n];
+// 	const float newDegree = degrees[newIndex];
+// 	if (fabsf(newDegree - myDegree) < bestDiff) {
+// 	  bestDiff = fabsf(newDegree - myDegree);
+// 	  bestIndex = newIndex;
+// 	}
+//       }
+//       //printf("A: %e, B: %e, Difference: %e\n", myDegree, degrees[bestIndex], bestDiff);
+//       newGroup.push_back(bestIndex);
+//     }
+//     shuffledGroups.push_back(newGroup);
+//   }
+// }
 
 void pullOutSubMatrix(const float* const similarities, const int width, std::vector<int>& indices, float* const newMatrix, std::map<int, int>& newIndexMap) {
   // Sort indices from least to greatest
@@ -109,8 +109,8 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     n += g.size();
   }
 
-  std::map<int, float> degrees;
-  degreeMatrix(similarities, width, degrees);
+  //std::map<int, float> degrees;
+  //degreeMatrix(similarities, width, degrees);
 
   // Allocate buffer
   float* const subMatrix = (float*)malloc(sizeof(float) * n * n);
@@ -144,8 +144,8 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     for (int i = 0; i < mNumIterations; ++i) {
       //if (i % 1000 == 0) printf("Iteration %d complete.\n", i);
       TIndicesGroups shuffledGroups;
-      //shuffleGroups(groupSizes, otherIndices, shuffledGroups);
-      shuffleGroups(similarities, width, otherGroups, otherIndices, degrees, shuffledGroups);
+      shuffleGroups(groupSizes, otherIndices, shuffledGroups);
+      //shuffleGroups(similarities, width, otherGroups, otherIndices, degrees, shuffledGroups);
       shuffledGroups.push_back(g);
       // int curr = startingPoint;
       // for (auto const s : groupSizes) {

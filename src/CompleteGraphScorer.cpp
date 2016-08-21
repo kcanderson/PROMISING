@@ -44,7 +44,8 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
   
   const int gsize = 3;
   const int numGroups = groups.size();
-  
+
+
   for (int i = 0; i <= numGroups - gsize; ++i) {
     const TInts g1 = groups[i];
     for (int j = i + 1; j <= numGroups - gsize + 1; ++j) {
@@ -58,40 +59,42 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
 	    const float* r2 = similarities + width * i2;
 	    const float v12 = *(r1 + i2);
 	    for (const auto i3 : g3) {
-	      // const float v13 = *(r1 + i3);
-	      // const float v23 = *(r2 + i3);
+	      const float v13 = *(r1 + i3);
+	      const float v23 = *(r2 + i3);
 
-	      // // Score i1
-	      // float acc = v12 + v13;
-	      // //float mx = (v12 > v13) ? v12 : v13;
-	      // float mn = (v12 < v13) ? v12 : v13;
-	      // acc += (v23 > mn) ? mn : v23;
-	      // if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
-
-	      // // Score i2
-	      // acc = v12 + v23;
-	      // //mx = (v12 > v23) ? v12 : v23;
-	      // mn = (v12 < v23) ? v12 : v23;
-	      // acc += (v13 > mn) ? mn : v13;
-	      // if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
-
-	      // // Score i3
-	      // acc = v13 + v23;
-	      // //mx = (v13 > v23) ? v13 : v23;
-	      // mn = (v13 < v23) ? v13 : v23;
-	      // acc += (v12 > mn) ? mn : v12;
-	      // if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
-	      
-	      // i1 - i2
-	      float acc = v12;
-	      // i1 - i3
-	      acc += *(r1 + i3);
-	      // i2 - i3
-	      acc += *(r2 + i3);
-
+	      // Score i1
+	      float acc = v12 + v13;
+	      //float mx = (v12 > v13) ? v12 : v13;
+	      float mn = (v12 < v13) ? v12 : v13;
+	      acc += (v23 > mn) ? mn : v23;
 	      if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
+
+	      // Score i2
+	      acc = v12 + v23;
+	      //mx = (v12 > v23) ? v12 : v23;
+	      mn = (v12 < v23) ? v12 : v23;
+	      acc += (v13 > mn) ? mn : v13;
 	      if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
+
+	      // Score i3
+	      acc = v13 + v23;
+	      //mx = (v13 > v23) ? v13 : v23;
+	      mn = (v13 < v23) ? v13 : v23;
+	      acc += (v12 > mn) ? mn : v12;
 	      if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
+
+	      // i1 - i2
+	      //float acc = v12;
+	      // i1 - i3
+	      //acc += *(r1 + i3);
+	      //acc += r1[i3];
+	      // i2 - i3
+	      //acc += *(r2 + i3);
+	      //acc += r2[i3];
+
+	      //if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
+	      //if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
+	      //if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
 	    }
 	  }
 	}
