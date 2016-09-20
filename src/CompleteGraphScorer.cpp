@@ -16,7 +16,7 @@
 
 typedef std::vector<int> TInts;
 
-bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, TScoreMap& scores) const
+bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
 {
   // Count total number of nodes in all groups
   // int numInGroups = 0;
@@ -61,40 +61,41 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
 	    for (const auto i3 : g3) {
 	      const float v13 = *(r1 + i3);
 	      const float v23 = *(r2 + i3);
-
+#define MIN_SCORING 0
+#if MIN_SCORING
 	      // Score i1
 	      float acc = v12 + v13;
-	      //float mx = (v12 > v13) ? v12 : v13;
-	      float mn = (v12 < v13) ? v12 : v13;
+	      float mn = (v12 > v13) ? v12 : v13;
 	      acc += (v23 > mn) ? mn : v23;
 	      if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
 
 	      // Score i2
 	      acc = v12 + v23;
 	      //mx = (v12 > v23) ? v12 : v23;
-	      mn = (v12 < v23) ? v12 : v23;
+	      mn = (v12 > v23) ? v12 : v23;
 	      acc += (v13 > mn) ? mn : v13;
 	      if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
 
 	      // Score i3
 	      acc = v13 + v23;
 	      //mx = (v13 > v23) ? v13 : v23;
-	      mn = (v13 < v23) ? v13 : v23;
+	      mn = (v13 > v23) ? v13 : v23;
 	      acc += (v12 > mn) ? mn : v12;
 	      if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
+#else
+	      //i1 - i2
+	      float acc = v12;
+	      //i1 - i3
+	      acc += *(r1 + i3);
+	      acc += r1[i3];
+	      //i2 - i3
+	      acc += *(r2 + i3);
+	      acc += r2[i3];
 
-	      // i1 - i2
-	      //float acc = v12;
-	      // i1 - i3
-	      //acc += *(r1 + i3);
-	      //acc += r1[i3];
-	      // i2 - i3
-	      //acc += *(r2 + i3);
-	      //acc += r2[i3];
-
-	      //if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
-	      //if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
-	      //if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
+	      if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
+	      if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
+	      if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
+#endif
 	    }
 	  }
 	}
@@ -152,7 +153,7 @@ void CompleteGraphScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap,
   
 }
 
-bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, TScoreMap& scores) const
+bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
 {
   // Allocate memory for scores
   float* const rawScores = (float*)malloc(sizeof(float) * width);
@@ -192,9 +193,52 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
 	      const float v12 = *(r1 + i2);
 	      for (const auto i3 : g3) {
 		const float* r3 = similarities + width * i3;
-		const float v123 = v12 + *(r1 + i3) + *(r2 + i3);
+		const float v13 = r1[i3];
+		const float v23 = r2[i3];
+		const float v123 = v12 + v13 + v23;
 
 		for (const auto i4 : g4) {
+#if MIN_SCORING
+		  const float v14 = r1[i4];
+		  const float v24 = r2[i4];
+		  const float v34 = r3[i4];
+		  
+		  // i1
+		  float mn = (v12 < v13) ? v12 : v13;
+		  mn = (mn < v14) ? mn : v14;
+		  float acc = v12 + v13 + v14;
+		  acc += (v23 > mn) ? mn : v23;
+		  acc += (v24 > mn) ? mn : v24;
+		  acc += (v34 > mn) ? mn : v34;
+		  if (acc > intermediateScores[i1]) intermediateScores[i1] = acc;
+
+		  // i2
+		  mn = (v12 < v23) ? v12 : v23;
+		  mn = (mn < v24) ? mn : v24;
+		  acc = v12 + v23 + v24;
+		  acc += (v13 > mn) ? mn : v13;
+		  acc += (v14 > mn) ? mn : v14;
+		  acc += (v34 > mn) ? mn : v34;
+		  if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
+
+		  // i3
+		  mn = (v13 < v23) ? v13 : v23;
+		  mn = (mn < v34) ? mn : v34;
+		  acc = v13 + v23 + v34;
+		  acc += (v12 > mn) ? mn : v12;
+		  acc += (v14 > mn) ? mn : v14;
+		  acc += (v23 > mn) ? mn : v23;
+		  if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
+
+		  // i4
+		  mn = (v14 < v24) ? v14 : v24;
+		  mn = (mn < v34) ? mn : v34;
+		  acc = v14 + v24 + v34;
+		  acc += (v12 > mn) ? mn : v12;
+		  acc += (v13 > mn) ? mn : v13;
+		  acc += (v23 > mn) ? mn : v23;
+		  if (acc > intermediateScores[i4]) intermediateScores[i4] = acc;
+#else
 		  // i1, i2, i3
 		  float acc = v123;
 		  // i1 - i4
@@ -208,6 +252,7 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
 		  if (acc > intermediateScores[i2]) intermediateScores[i2] = acc;
 		  if (acc > intermediateScores[i3]) intermediateScores[i3] = acc;
 		  if (acc > intermediateScores[i4]) intermediateScores[i4] = acc;
+#endif
 		}
 	      }
 	    }

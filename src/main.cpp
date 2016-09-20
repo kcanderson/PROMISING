@@ -1,7 +1,27 @@
 #include "coreroutines.h"
 #include "CompleteGraphScorer.h"
+#include "FastScorer.h"
 #include "PValueModuleScorer.h"
 #include <tclap/CmdLine.h>
+
+
+bool readDegreeGroups(const std::string& filename, TIndexMap& geneToIndexMap, std::map<int, int>& nodeDegreeGroup) {
+  std::ifstream dinfile(filename);
+  TGroups groups;
+  
+  if (false == readGroups(dinfile, groups)) {
+    printf("Could not read degree group file.");
+    return false;
+  }
+  int i = 0;
+  for (auto const& g : groups) {
+    for (auto const& node : g) {
+      nodeDegreeGroup[geneToIndexMap[node]] = i;
+    }
+    i++;
+  }
+  return true;
+}
 
 int main(int argc, char** argv) {
   try {
@@ -18,11 +38,19 @@ int main(int argc, char** argv) {
     cmd.add(outFilename);
     TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
     cmd.add(cGroupSize);
+
+    TCLAP::ValueArg<std::string> method("m", "method", "Scoring method, complete or fast", false, "fast", "string");
+    cmd.add(method);
+
+    TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
+    cmd.add(degree);
+    
     
     // Read in command-line options.
     cmd.parse(argc, argv);
 
     // Read in groups from file
+    std::map<int, int> nodeDegreeGroups;
     std::string gfilename = groupsFilename.getValue();
     std::ifstream ginfile(gfilename);
     TGroups groups;
@@ -60,7 +88,11 @@ int main(int argc, char** argv) {
       moduleScorer = new CompleteGraphScorer4();
     }
     else {
-      moduleScorer = new CompleteGraphScorer();
+      if (method.getValue() == "complete") {
+	moduleScorer = new CompleteGraphScorer();
+      } else {
+	moduleScorer = new FastScorer();
+      }
     }
     
     if (pIterations == -1) {
@@ -82,8 +114,22 @@ int main(int argc, char** argv) {
     }
     else if (pIterations > 0) {
       // We need to calculate empirical p-values.
+
+      // Grab degree groups
+      std::string dFileName = degree.getValue();
+      if (dFileName == "") {
+	for (auto const& i : fullMap) {
+	  nodeDegreeGroups[i.second] = 0;
+	}
+      } else {
+	if (false == readDegreeGroups(dFileName, fullMap, nodeDegreeGroups)) {
+	  printf("Problem reading node degree groups.");
+	  return(-1);
+	}
+      }
+      
       // PValueModulesScorer will take ownership of the complete graph scorer.
-      moduleScorer = new PValueModuleScorer(pIterations, moduleScorer);
+      moduleScorer = new PValueModuleScorer(pIterations, moduleScorer, nodeDegreeGroups);
       matrixWidth = numNodes;
       map = fullMap;
       std::cout << "Reading entire network into memory. This may take a while." << std::endl;
@@ -116,7 +162,14 @@ int main(int argc, char** argv) {
     // Score genes based on strong modules
     std::cout << "Scoring genes." << std::endl;
     TScoreMap scores;
-    moduleScorer->ScoreModule(mat, matrixWidth, igroups, scores);
+    TIndices inds;
+    for (auto const& g : igroups) {
+      for (auto i : g) {
+	inds.push_back(i);
+      }
+    }
+    
+    moduleScorer->ScoreModule(mat, matrixWidth, igroups, inds, scores);
 
     TReverseIndexMap rmap2;
     for (auto const &p : map) {
