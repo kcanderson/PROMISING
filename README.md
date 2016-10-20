@@ -1,4 +1,4 @@
-# PROMISING (PRioritization On Modules In Sets of Implicated Non-intersecting Genes)
+# PROMISING (PRioritization Of Modules In Sets of Implicated Non-intersecting Genes)
 
 The PROMISING method finds promising leads in the candidate genesets created by genome-wide association studies. It proritizes the candidates based on their cohesiveness in an underlying protein-protein functional network under the assumption that the *actual* genes will be functionally similar. For example, the causal genes may operate in the same complex or engage in the same pathway.
 
