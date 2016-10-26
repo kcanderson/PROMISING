@@ -10,33 +10,61 @@ typedef std::map<std::string, TGroups> TDiseases;
 bool parseMultipleDiseaseFile(const std::string& filename, TDiseases& diseaseEntries) {
   std::ifstream instream(filename);
   std::string line;
-  TDiseases entries;
   while (!instream.eof()) {
+    TGroups groups;
     std::getline(instream, line);
+    std::vector<std::string> split;
     std::stringstream stream(line);
     std::string entry;
-    std::string name;
-    stream >> name;
-    std::vector<std::string> genes;
-    TGroups groups;
-    while (!stream.eof()) {
-      stream >> entry;
-      //entry.erase(entry.find_last_not_of(" \n\r\t")+1);
-      char* dup = strdup(entry.c_str());
-      char* pch = strtok(dup, ",");
-      std::vector<std::string> group;
-      while (pch != 0) {
-	group.push_back(pch);
-	pch = strtok(0, ",");
+    while (std::getline(stream, entry, '\t')) {
+      split.push_back(entry);
+    }
+
+    for (int i = 1; i < split.size(); ++i) {
+      std::stringstream ss(split[i]);
+      std::vector<std::string> items;
+      while (std::getline(ss, entry, ',')) {
+	items.push_back(entry);
       }
-      groups.push_back(group);
+      groups.push_back(items);
     }
-    if (groups.size() > 0) {
-      diseaseEntries[name] = groups;
-    }
+    if (groups.size() > 0) diseaseEntries[split[0]] = groups;
   }
   return true;
 }
+
+// bool parseMultipleDiseaseFile(const std::string& filename, TDiseases& diseaseEntries) {
+//   std::ifstream instream(filename);
+//   std::string line;
+//   TDiseases entries;
+//   while (!instream.eof()) {
+//     std::getline(instream, line);
+//     std::stringstream stream(line);
+//     std::string entry;
+//     std::string name;
+//     stream >> name;
+//     std::vector<std::string> genes;
+//     TGroups groups;
+//     //while (!stream.eof()) {
+//     //std::stringstream ss(
+//     while (std::getline(stream, entry) {
+//       stream >> entry;
+//       //entry.erase(entry.find_last_not_of(" \n\r\t")+1);
+//       char* dup = strdup(entry.c_str());
+//       char* pch = strtok(dup, ",");
+//       std::vector<std::string> group;
+//       while (pch != 0) {
+// 	group.push_back(pch);
+// 	pch = strtok(0, ",");
+//       }
+//       groups.push_back(group);
+//     }
+//     if (groups.size() > 0) {
+//       diseaseEntries[name] = groups;
+//     }
+//   }
+//   return true;
+// }
 
 bool readDegreeGroups(const std::string& filename, TIndexMap& geneToIndexMap, std::map<int, int>& nodeDegreeGroup) {
   std::ifstream dinfile(filename);
@@ -314,8 +342,9 @@ int main(int argc, char** argv) {
 	  moduleScorer->BriefSummary(scores, rmap2, std::cout);
 	  printf("\n\n");
 	  if (outFile != "") {
-	    *outStream << "-----------------" << std::endl;
+	    *outStream << "-------------------" << std::endl;
 	    *outStream << disease.first << std::endl;
+	    *outStream << "-------------------" << std::endl;
 	    moduleScorer->LongSummary(scores, rmap2, igroups, *outStream);
 	  }
 	}
