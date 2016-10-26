@@ -105,6 +105,7 @@ bool FastScorer::ScoreModule(const float* const similarities, const int width, c
       	  const float a = sim[iii];
       	  float b = sim[jjj];
       	  b = (a < b) ? a : b;
+      	  //b = (a > b) ? a : b;
       	  b = (b < vvv) ? b : vvv;
       	  score += b;
       	}

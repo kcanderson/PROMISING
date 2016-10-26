@@ -2,6 +2,7 @@
 ** This software is in the public domain, furnished "as is", without technical
 ** support, and with no warranty, express or implied, as to its usefulness for
 ** any purpose.
+
 **
 ** PValueModuleScorer.cpp
 ** This class scores a gene based on an empirical p-value.
@@ -54,6 +55,19 @@ void PValueModuleScorer::ShuffleGroups(const TIndicesGroups& groups, const std::
 
 }
 
+// void PValueModuleScorer::ShuffleGroups(const TIndicesGroups& groups, const std::vector<int>& excisedIndices, TIndicesGroups& shuffledGroups) const {
+//   std::set<int> indices(excisedIndices.begin(), excisedIndices.end());
+//   for (auto const& g : groups) {
+//     std::vector<int> newGroup;
+//     for (auto i : g) {
+//       newGroup.push_back(rand() % 19100);
+//     }
+//     shuffledGroups.push_back(newGroup);
+//   }
+
+// }
+
+
 
 void pullOutSubMatrix(const float* const similarities, const int width, std::vector<int>& indices, float* const newMatrix, std::map<int, int>& newIndexMap) {
   // Sort indices from least to greatest
@@ -91,7 +105,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
 {
   // Seed the random number generator.
   std::srand(std::time(0));
-    
+  
   std::map<int, std::vector<float> > allScores;
   int gind = 1;
 
@@ -153,6 +167,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
       TIndices newInds;
       flattenGroups(newGroups, newInds);
       mScorer->ScoreModule(subMatrix, n, newGroups, newInds, temp);
+      
 #else
       mScorer->ScoreModule(similarities, width, shuffledGroups, g, temp);
 #endif
@@ -264,11 +279,15 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
   calculatePValues(scores, pvals);
   bonferroniCorrection(pvals, pvalsAdjusted);
 #else
+  TScoreMap pvals(scores);
   TScoreMap pvalsAdjusted;
   bonferroniCorrection(scores, pvalsAdjusted);
 #endif
   
-  //benjaminiHochbergCorrection(pvals, pvalsAdjusted); 
+  //benjaminiHochbergCorrection(pvals, pvalsAdjusted);
+  
+#define OLD_FORMAT 0
+#if OLD_FORMAT
   int l = 1;
   for (auto const &g : groups) {
     out << "----------------" << std::endl;
@@ -298,5 +317,25 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
     }
     l++;
   }
+#else
+  // New formatting
+  // Gene Locus P-val Adj. p-val
+  out << "Gene\tLocus\tP-val\tAdj. p-val" << std::endl;
+  std::map<int, std::string> groupMap;
+  int i = 0;
+  for (auto const &g : groups) {
+    std::string locus = "Locus " + std::to_string(i++);
+    for (auto gene : g) {
+      groupMap[gene] = locus;
+    }
+  }
 
+  std::vector<std::pair<int, float> > pairs;
+  sortMapByVal(pvals, pairs, pvalCompare);
+  for (auto const &e : pairs) {
+    out << rmap[e.first] << "\t" << groupMap[e.first] << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+  }
+    
+  
+#endif
 }
