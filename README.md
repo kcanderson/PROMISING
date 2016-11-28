@@ -54,7 +54,7 @@ A    B    C    D
 USAGE: 
 
    ./src/promising  [-d <string>] [-m <string>] [-s <int>] [-o
-                    <string>] [-p <int>] -g <string> -n <string> [--]
+                    <string>] [-p <int>] -g <string> [--]
                     [--version] [-h]
 
 Where: 
