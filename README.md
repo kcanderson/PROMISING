@@ -53,9 +53,9 @@ A    B    C    D
 ```
 USAGE: 
 
-   ./src/promising  [-d <string>] [-m <string>] [-s <int>] [-o
-                    <string>] [-p <int>] -g <string> [--]
-                    [--version] [-h]
+   promising  [-d <string>] [-m <string>] [-s <int>] [-o
+              <string>] [-p <int>] -g <string> [--]
+              [--version] [-h]
 
 Where: 
 
@@ -130,8 +130,8 @@ The above priotization method assumes the Regularized Laplacian graph kernel has
 ```
 USAGE: 
 
-   ./src/reglaplacian  [-k <string>] [-a <float>] -o <string> -n <string>
-                       [--] [--version] [-h]
+   reglaplacian  [-k <string>] [-a <float>] -o <string> -n <string>
+                 [--] [--version] [-h]
 
 Where: 
 
