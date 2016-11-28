@@ -21,7 +21,8 @@
 #include <algorithm>
 
 typedef std::map<std::string, int> TIndexMap;
-typedef std::vector< std::vector<std::string> > TGroups;
+//typedef std::vector< std::vector<std::string> > TGroups;
+typedef std::map<std::string, std::vector<std::string> > TGroups;
 
 int parseNamesLine(const std::string line, TIndexMap& map);
 bool readEntriesFromNetwork(std::ifstream& matFile, TIndexMap& fullMap, const std::vector<std::string>& entries, TIndexMap& newNameMap, float* const mat, const int width);
@@ -50,24 +51,25 @@ void sortMapByVal(const std::map<int, float>& map, std::vector<std::pair<int, fl
 }
 
 template <typename T>
-void flattenGroups(const std::vector< std::vector<T> >& groups, std::vector<T>& entries)
+void flattenGroups(const TGroups& groups, std::vector<T>& entries)
 {
   for (auto group : groups) {
-    entries.insert(entries.end(), group.begin(), group.end());
+    entries.insert(entries.end(), group.second.begin(), group.second.end());
   }
 }
 
 template <typename T>
-void mapGroupsToIndices(const std::vector< std::vector<T> >& groups, std::map<T, int>& map, TIndicesGroups& indicesGroups)
+void mapGroupsToIndices(const TGroups& groups, std::map<T, int>& map, TIndicesGroups& indicesGroups)
 {
   for (auto const &g : groups) {
     std::vector<int> inds;
-    for (auto const &e : g) {
+    for (auto const &e : g.second) {
       if (map.find(e) != map.end()) {
 	inds.push_back(map[e]);
       }
     }
-    indicesGroups.push_back(inds);
+    //indicesGroups.push_back(inds);
+    indicesGroups[g.first] = inds;
   }
 }
 

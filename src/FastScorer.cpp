@@ -37,13 +37,14 @@ bool FastScorer::ScoreModule(const float* const similarities, const int width, c
   for (auto const& group : groups) {
     // intersection between indicesToScore and group not nil?
     TIndices g;
-    for (auto i : group) {
+    for (auto i : group.second) {
       if (std::find(indicesToScore.begin(), indicesToScore.end(), i) != indicesToScore.end()) {
 	g.push_back(i);
       }
     }
     if (g.size() > 0) {
-      goodGroups.push_back(g);
+      //goodGroups.push_back(g);
+      goodGroups[group.first] = g;
     }
   }
   
@@ -56,14 +57,15 @@ bool FastScorer::ScoreModule(const float* const similarities, const int width, c
   }
 
   for (auto const& group : goodGroups) {
-    for (auto i : group) {
+    for (auto i : group.second) {
       scores[i] = 0.0f;
     }
   }
   
   for (auto const& group : goodGroups) {
-    for (int i = 0; i < group.size(); ++i) {
-      const auto me = group[i];
+    //for (int i = 0; i < group.size(); ++i) {
+    //const auto me = group[i];
+    for (auto const& me : group.second) {
       const float* const sim = similarities + width * me;
       TIndicesGroups otherGroups(groups);
       auto it = std::find(otherGroups.begin(), otherGroups.end(), group);
@@ -76,8 +78,9 @@ bool FastScorer::ScoreModule(const float* const similarities, const int width, c
   	int maxnode = -1;
   	float maxscore = -FLT_MAX;
   	//for (const auto j : othergroup) {
-	for (int j = 0; j < othergroup.size(); ++j) {
-	  const int ot = othergroup[j];
+	//for (int j = 0; j < othergroup.size(); ++j) {
+	//const int ot = othergroup[j];
+	for (const auto& ot : othergroup.second) {
   	  const float sc = sim[ot];
 	  //maxnode = (sc > maxscore) ? ot : maxnode;
 	  //maxscore = (sc > maxscore) ? sc : maxscore;
@@ -141,7 +144,7 @@ void FastScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TI
     out << "----------------" << std::endl;
     out << "Locus " << l << std::endl << "----------------" << std::endl;
     TScoreMap locusScores;
-    for (auto const &e : g) {
+    for (auto const &e : g.second) {
       locusScores[e] = scores[e];
     }
     std::vector<std::pair<int, float> > pairs;

@@ -35,7 +35,7 @@ void PValueModuleScorer::ShuffleGroups(const TIndicesGroups& groups, const std::
   std::set<int> indices(excisedIndices.begin(), excisedIndices.end());
   for (auto const& g : groups) {
     std::vector<int> newGroup;
-    for (auto i : g) {
+    for (auto i : g.second) {
       auto const& it = mNodeDegreeMap.find(i);
       const int degreeGroup = mNodeDegreeMap.find(i)->second;
 
@@ -50,7 +50,8 @@ void PValueModuleScorer::ShuffleGroups(const TIndicesGroups& groups, const std::
       indices.insert(v);
       newGroup.push_back(v);
     }
-    shuffledGroups.push_back(newGroup);
+    //shuffledGroups.push_back(newGroup);
+    shuffledGroups[g.first] = newGroup;
   }
 
 }
@@ -111,7 +112,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
 
   int n = 0;
   for (auto const &g : groups) {
-    n += g.size();
+    n += g.second.size();
   }
 
   //std::map<int, float> degrees;
@@ -131,7 +132,7 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     for (int i = 0; i < width; ++i) {
       otherIndices.push_back(i);
     }
-    for (auto const i : g) {
+    for (auto const i : g.second) {
       auto it = std::find(otherIndices.begin(), otherIndices.end(), i);
       otherIndices.erase(it);
     }
@@ -150,8 +151,9 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
     for (int i = 0; i < mNumIterations; ++i) {
       //if (i % 1000 == 0) printf("Iteration %d complete.\n", i);
       TIndicesGroups shuffledGroups;
-      ShuffleGroups(otherGroups, g, shuffledGroups);
-      shuffledGroups.push_back(g);
+      ShuffleGroups(otherGroups, g.second, shuffledGroups);
+      //shuffledGroups.push_back(g.second);
+      shuffledGroups[g.first] = g.second;
       
       TScoreMap temp;
 #if TEMP_BUFFER
@@ -169,9 +171,9 @@ bool PValueModuleScorer::ScoreModule(const float* const similarities, const int 
       mScorer->ScoreModule(subMatrix, n, newGroups, newInds, temp);
       
 #else
-      mScorer->ScoreModule(similarities, width, shuffledGroups, g, temp);
+      mScorer->ScoreModule(similarities, width, shuffledGroups, g.second, temp);
 #endif
-      for (auto const i : g) {
+      for (auto const i : g.second) {
 #if TEMP_BUFFER
       	allScores[i].push_back(temp[indexMap[i]]);
 #else
@@ -325,7 +327,7 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
   int i = 0;
   for (auto const &g : groups) {
     std::string locus = "Locus " + std::to_string(i++);
-    for (auto gene : g) {
+    for (auto gene : g.second) {
       groupMap[gene] = locus;
     }
   }

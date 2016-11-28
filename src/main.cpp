@@ -26,7 +26,10 @@ bool parseMultipleDiseaseFile(const std::string& filename, TDiseases& diseaseEnt
       while (std::getline(ss, entry, ',')) {
 	items.push_back(entry);
       }
-      groups.push_back(items);
+      char locusName[8];
+      snprintf(locusName, 8, "%d", i);
+      //groups.push_back(items);
+      groups[locusName] = items;
     }
     if (groups.size() > 0) diseaseEntries[split[0]] = groups;
   }
@@ -76,14 +79,13 @@ bool readDegreeGroups(const std::string& filename, TIndexMap& geneToIndexMap, st
   }
   int i = 0;
   for (auto const& g : groups) {
-    for (auto const& node : g) {
+    for (auto const& node : g.second) {
       nodeDegreeGroup[geneToIndexMap[node]] = i;
     }
     i++;
   }
 
   dinfile.close();
-  
   return true;
 }
 
@@ -91,7 +93,7 @@ int main(int argc, char** argv) {
   try {
 
     // Command-line parsing
-    TCLAP::CmdLine cmd("Command description message", ' ', "0.9");
+    TCLAP::CmdLine cmd("Prioritization of candidate genes in disjoint sets.", ' ', "0.9");
     TCLAP::ValueArg<std::string> netFilename("n", "network", "Network file", true, "", "string");
     cmd.add(netFilename);
     TCLAP::ValueArg<std::string> groupsFilename("g", "groups", "Groups file", true, "", "string");
@@ -255,7 +257,7 @@ int main(int argc, char** argv) {
       TScoreMap scores;
       TIndices inds;
       for (auto const& g : igroups) {
-	for (auto i : g) {
+	for (auto i : g.second) {
 	  inds.push_back(i);
 	}
       }
@@ -327,7 +329,7 @@ int main(int argc, char** argv) {
 	  mapGroupsToIndices<std::string>(disease.second, map, igroups);
 	  TIndices inds;
 	  for (auto const& g : igroups) {
-	    for (auto i : g) {
+	    for (auto i : g.second) {
 	      inds.push_back(i);
 	    }
 	  }

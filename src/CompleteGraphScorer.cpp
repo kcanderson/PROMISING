@@ -44,14 +44,17 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
   
   const int gsize = 3;
   const int numGroups = groups.size();
-
+  std::vector<TInts> grps;
+  for (auto const &group : groups) {
+    grps.push_back(group.second);
+  }
 
   for (int i = 0; i <= numGroups - gsize; ++i) {
-    const TInts g1 = groups[i];
+    const TInts g1 = grps[i];
     for (int j = i + 1; j <= numGroups - gsize + 1; ++j) {
-      const TInts g2 = groups[j];
+      const TInts g2 = grps[j];
       for (int k = j + 1; k <= numGroups - gsize + 2; ++k) {
-	const TInts g3 = groups[k];
+	const TInts g3 = grps[k];
 
 	for (const auto i1 : g1) {
 	  const float* r1 = similarities + width * i1;
@@ -108,7 +111,7 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
   }
 
   for (auto const &g : groups) {
-    for (auto i : g) {
+    for (auto i : g.second) {
       scores[i] = rawScores[i];
     }
   }
@@ -140,7 +143,7 @@ void CompleteGraphScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap,
     out << "----------------" << std::endl;
     out << "Locus " << l << std::endl << "----------------" << std::endl;
     TScoreMap locusScores;
-    for (auto const &e : g) {
+    for (auto const &e : g.second) {
       locusScores[e] = scores[e];
     }
     std::vector<std::pair<int, float> > pairs;
@@ -177,15 +180,19 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
   
   const int gsize = 4;
   const int numGroups = groups.size();
+  std::vector<TInts> grps;
+  for (auto const &group : groups) {
+    grps.push_back(group.second);
+  }
   
   for (int i = 0; i <= numGroups - gsize; ++i) {
-    const TInts g1 = groups[i];
+    const TInts g1 = grps[i];
     for (int j = i + 1; j <= numGroups - gsize + 1; ++j) {
-      const TInts g2 = groups[j];
+      const TInts g2 = grps[j];
       for (int k = j + 1; k <= numGroups - gsize + 2; ++k) {
-	const TInts g3 = groups[k];
+	const TInts g3 = grps[k];
 	for (int l = k + 1; l <= numGroups - gsize + 3; ++l) {
-	  const TInts g4 = groups[l];
+	  const TInts g4 = grps[l];
 	  for (const auto i1 : g1) {
 	    const float* r1 = similarities + width * i1;
 	    for (const auto i2 : g2) {
@@ -267,7 +274,7 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
   }
 
   for (auto const &g : groups) {
-    for (auto i : g) {
+    for (auto i : g.second) {
       scores[i] = rawScores[i];
     }
   }

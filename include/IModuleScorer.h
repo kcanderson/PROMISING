@@ -17,7 +17,8 @@
 #include <string>
 
 typedef std::vector<int> TIndices;
-typedef std::vector<TIndices> TIndicesGroups;
+//typedef std::vector<TIndices> TIndicesGroups;
+typedef std::map<std::string, TIndices> TIndicesGroups;
 typedef std::map<int, float> TScoreMap;
 typedef std::map<int, std::string> TReverseIndexMap;
 
