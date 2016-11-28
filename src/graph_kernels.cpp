@@ -127,8 +127,10 @@ int main(int argc, char** argv)
   cmd.add(netFilename);
   TCLAP::ValueArg<std::string> outFilename("o", "outfile", "Output matrix file", true, "", "string");
   cmd.add(outFilename);
-  TCLAP::ValueArg<float> alpha("a", "alpha", "Alpha parameter", true, 0.0f, "float");
+  TCLAP::ValueArg<float> alpha("a", "alpha", "Alpha parameter", false, 0.01f, "float");
   cmd.add(alpha);
+  TCLAP::ValueArg<std::string> method("k", "kernel", "Graph kernel", false, "rl", "string");
+  cmd.add(method);
   
   cmd.parse(argc, argv);
   
@@ -160,9 +162,17 @@ int main(int argc, char** argv)
     mat[i] = 0.0f;
   }
   populatematrix(net, indices, mat, n);
-  float a = alpha.getValue();
-  regularizedlaplacian(a, mat, n);
 
+
+  const std::string m = method.getValue();
+
+  if (m == "amat") {
+    printf("Adjacency matrix\n");
+  } else {
+    printf("Regularized Laplacian\n");
+    float a = alpha.getValue();
+    regularizedlaplacian(a, mat, n);
+  }
   std::string ofilename = outFilename.getValue();
   f = fopen(ofilename.c_str(), "w");
   if (f == 0) {
