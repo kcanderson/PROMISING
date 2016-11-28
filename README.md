@@ -59,15 +59,6 @@ USAGE:
 
 Where: 
 
-   -d <string>,  --degree_groups <string>
-     Degree groups for node permutations
-
-   -m <string>,  --method <string>
-     Scoring method, complete or fast
-
-   -s <int>,  --size <int>
-     Complete graph group size
-
    -o <string>,  --outfile <string>
      Output summary file
 
@@ -77,8 +68,11 @@ Where:
    -g <string>,  --groups <string>
      (required)  Groups file
 
-   -n <string>,  --network <string>
-     (required)  Network file
+   -m <string>,  --matrix <string>
+     (required)  Matrix file
+	 
+   -d <string>,  --degree_groups <string>
+     Degree groups for node permutations
 
 ```
 
@@ -126,6 +120,33 @@ promising -n data/string_reglaplacian_notextmining_network.tsv -g data/examples/
 will run the method 10,000 times with random sets of genes the same size as what was input. It will then calculate empirical p-values. It will also report adjusted p-values using the Bonferroni method to control for the FWER.
 
 
+
+# Calculating Regularized Laplacian kernel on network
+
+The above priotization method assumes the Regularized Laplacian graph kernel has been applied to protein-protein networks. We provide a tool that will apply the kernel on network files.
+
+## Usage
+
+```
+USAGE: 
+
+   ./src/reglaplacian  [-k <string>] [-a <float>] -o <string> -n <string>
+                       [--] [--version] [-h]
+
+Where: 
+
+   -k <string>,  --kernel <string>
+     Graph kernel (default is regularize laplacian)
+
+   -a <float>,  --alpha <float>
+     Alpha parameter
+
+   -o <string>,  --outfile <string>
+     (required)  Output matrix file
+
+   -n <string>,  --network <string>
+     (required)  Network file
+```
 
 ## License
 

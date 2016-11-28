@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
     // Command-line parsing
     TCLAP::CmdLine cmd("Prioritization of candidate genes in disjoint sets.", ' ', "0.9");
-    TCLAP::ValueArg<std::string> netFilename("n", "network", "Network file", true, "", "string");
+    TCLAP::ValueArg<std::string> netFilename("m", "matrix", "Adjacency matrix", true, "", "string");
     cmd.add(netFilename);
     TCLAP::ValueArg<std::string> groupsFilename("g", "groups", "Groups file", true, "", "string");
     cmd.add(groupsFilename);
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
     cmd.add(cGroupSize);
 
-    TCLAP::ValueArg<std::string> method("m", "method", "Scoring method, complete or fast", false, "fast", "string");
+    TCLAP::ValueArg<std::string> method("z", "method", "Scoring method, complete or fast", false, "fast", "string");
     cmd.add(method);
 
     TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
