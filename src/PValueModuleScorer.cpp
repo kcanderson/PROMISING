@@ -322,20 +322,20 @@ void PValueModuleScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, 
 #else
   // New formatting
   // Gene Locus P-val Adj. p-val
-  out << "Gene\tLocus\tP-val\tAdj. p-val" << std::endl;
+  out << "locus\tgene\tp-val\tadj. p-val" << std::endl;
   std::map<int, std::string> groupMap;
   int i = 0;
   for (auto const &g : groups) {
-    std::string locus = "Locus " + std::to_string(i++);
+    //std::string locus = "Locus " + std::to_string(i++);
     for (auto gene : g.second) {
-      groupMap[gene] = locus;
+      groupMap[gene] = g.first;
     }
   }
 
   std::vector<std::pair<int, float> > pairs;
   sortMapByVal(pvals, pairs, pvalCompare);
   for (auto const &e : pairs) {
-    out << rmap[e.first] << "\t" << groupMap[e.first] << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
+    out << groupMap[e.first] << "\t" << rmap[e.first] << "\t" << pvals[e.first] << "\t" << pvalsAdjusted[e.first] << std::endl;
   }
     
   

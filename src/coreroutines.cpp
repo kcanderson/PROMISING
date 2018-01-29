@@ -152,11 +152,11 @@ bool readEntriesFromNetwork(std::ifstream& matFile, TIndexMap& fullMap, const st
 //   return true;
 // }
 
-bool readGroups(std::ifstream& groupStream, TGroups& groups) {
+bool readGMT(std::ifstream& gmtStream, TGroups& groups) {
   // Locus name, description, Gene1, Gene2, ..., Genen
   std::string line;
-  while (!groupStream.eof()) {
-    std::getline(groupStream, line);
+  while (!gmtStream.eof()) {
+    std::getline(gmtStream, line);
     std::vector<std::string> entries;
     std::string name, description;
     std::stringstream stream(line);
@@ -179,6 +179,34 @@ bool readGroups(std::ifstream& groupStream, TGroups& groups) {
   
   return true;
 }
+
+// bool readGroups(std::ifstream& groupStream, TGroups& groups) {
+//   // Locus name, description, Gene1, Gene2, ..., Genen
+//   std::string line;
+//   while (!groupStream.eof()) {
+//     std::getline(groupStream, line);
+//     std::vector<std::string> entries;
+//     std::string name, description;
+//     std::stringstream stream(line);
+//     stream >> name >> description;
+    
+//     while (!stream.eof()) {
+//       std::string entry;
+//       stream >> entry;
+//       entry = trim(entry);
+//       if (!entry.empty()) {
+// 	entries.push_back(entry);
+//       }
+//     }
+
+//     if (entries.size() > 0) {
+//       //groups.push_back(entries);
+//       groups[name] = entries;
+//     }
+//   }
+  
+//   return true;
+// }
 
 // template <typename T>
 // void flattenGroups(const std::vector< std::vector<T> >& groups, std::vector<T>& entries)

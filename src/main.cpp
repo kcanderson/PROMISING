@@ -73,7 +73,7 @@ bool readDegreeGroups(const std::string& filename, TIndexMap& geneToIndexMap, st
   std::ifstream dinfile(filename);
   TGroups groups;
   
-  if (false == readGroups(dinfile, groups)) {
+  if (false == readGMT(dinfile, groups)) {
     printf("Could not read degree group file.");
     return false;
   }
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
       std::string gfilename = groupsFilename.getValue();
       std::ifstream ginfile(gfilename);
       TGroups groups;
-      readGroups(ginfile, groups);
+      readGMT(ginfile, groups);
 
       // Flatten out groups
       std::vector<std::string> entries;
