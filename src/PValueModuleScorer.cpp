@@ -36,21 +36,19 @@ void PValueModuleScorer::ShuffleGroups(const TIndicesGroups& groups, const std::
   for (auto const& g : groups) {
     std::vector<int> newGroup;
     for (auto i : g.second) {
-      auto const& it = mNodeDegreeMap.find(i);
       const int degreeGroup = mNodeDegreeMap.find(i)->second;
-
       const std::vector<int>* group = &(mDegreeGroupNodes.find(degreeGroup)->second);
       int j = rand() % group->size();
       int v = (*group)[j];
+      
       while (indices.find(v) != indices.end()) {
       	j = rand() % group->size();
       	v = (*group)[j];
       }
-
+      
       indices.insert(v);
       newGroup.push_back(v);
     }
-    //shuffledGroups.push_back(newGroup);
     shuffledGroups[g.first] = newGroup;
   }
 

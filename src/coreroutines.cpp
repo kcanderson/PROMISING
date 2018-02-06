@@ -160,19 +160,18 @@ bool readGMT(std::ifstream& gmtStream, TGroups& groups) {
     std::vector<std::string> entries;
     std::string name, description;
     std::stringstream stream(line);
-    stream >> name >> description;
+    std::getline(stream, name, '\t');
+    std::getline(stream, description, '\t');
     
-    while (!stream.eof()) {
-      std::string entry;
-      stream >> entry;
+    std::string entry;
+    while (std::getline(stream, entry, '\t')) {
       entry = trim(entry);
       if (!entry.empty()) {
 	entries.push_back(entry);
       }
     }
-
+    
     if (entries.size() > 0) {
-      //groups.push_back(entries);
       groups[name] = entries;
     }
   }
