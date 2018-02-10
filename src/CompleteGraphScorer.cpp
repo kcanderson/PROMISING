@@ -64,7 +64,7 @@ bool CompleteGraphScorer::ScoreModule(const float* const similarities, const int
 	    for (const auto i3 : g3) {
 	      const float v13 = *(r1 + i3);
 	      const float v23 = *(r2 + i3);
-#define MIN_SCORING 0
+#define MIN_SCORING 1
 #if MIN_SCORING
 	      // Score i1
 	      float acc = v12 + v13;

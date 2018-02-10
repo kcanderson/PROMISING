@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
     cmd.add(cGroupSize);
 
-    TCLAP::ValueArg<std::string> method("z", "method", "Scoring method, complete or fast", false, "fast", "string");
+    TCLAP::ValueArg<std::string> method("z", "method", "Scoring method, complete or fast", false, "complete", "string");
     cmd.add(method);
 
     TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
