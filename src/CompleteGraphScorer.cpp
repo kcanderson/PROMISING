@@ -13,6 +13,7 @@
 #include "coreroutines.h"
 #include "string.h"
 #include <algorithm>
+#include <cfloat>
 
 typedef std::vector<int> TInts;
 
@@ -136,8 +137,11 @@ void CompleteGraphScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap
   }
 }
 
-void CompleteGraphScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const {
+void CompleteGraphScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const
+{
 
+#define OLD_FORMAT 0
+#if OLD_FORMAT
   int l = 1;
   for (auto const &g : groups) {
     out << "----------------" << std::endl;
@@ -153,6 +157,39 @@ void CompleteGraphScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap,
     }
     l++;
   }
+#else
+  std::map<int, std::string> groupMap;
+  int i = 0;
+  for (auto const &g : groups) {
+    //std::string locus = "Locus " + std::to_string(i++);
+    for (auto gene : g.second) {
+      groupMap[gene] = g.first;
+    }
+  }
+
+  std::vector<std::pair<int, float> > pairs;
+  sortMapByVal(scores, pairs, scoreCompare);
+  out << "locus\tgene\tscore" << std::endl;
+  for (auto const &e : pairs) {
+    out << groupMap[e.first] << "\t" << rmap[e.first] << "\t" << scores[e.first] << std::endl;
+  }
+#endif
+    
+  // int l = 1;
+  // for (auto const &g : groups) {
+  //   out << "----------------" << std::endl;
+  //   out << "Locus " << l << std::endl << "----------------" << std::endl;
+  //   TScoreMap locusScores;
+  //   for (auto const &e : g.second) {
+  //     locusScores[e] = scores[e];
+  //   }
+  //   std::vector<std::pair<int, float> > pairs;
+  //   sortMapByVal(locusScores, pairs, scoreCompare);
+  //   for (auto const &e : pairs) {
+  //     out << rmap[e.first] << "\t" << e.second << std::endl;
+  //   }
+  //   l++;
+  // }
   
 }
 
@@ -285,3 +322,152 @@ bool CompleteGraphScorer4::ScoreModule(const float* const similarities, const in
   free(intermediateScores);
   return true;
 }
+
+float score_complete4(const int score_node, const std::vector< std::vector<int> >& other_groups, const float* const similarities, const int width)
+{
+  const float* const me_base = similarities + (width * score_node);
+  std::vector< std::vector<int> > combinations;
+  comb(other_groups.size(), 3, combinations);
+  float score(0.0f);
+  
+  for (auto const& combination : combinations) {
+    float maxscore = -FLT_MAX;
+    const auto ig1 = combination[0];
+    const auto g1 = other_groups[ig1];
+    const auto ig2 = combination[1];
+    const auto g2 = other_groups[ig2];
+    const auto ig3 = combination[2];
+    const auto g3 = other_groups[ig3];
+
+    for (const auto n1 : g1) {
+      const float me_n1 = me_base[n1];
+      const float* n1_base = similarities + (width * n1);
+      const float curr_outer(me_n1);
+      for (const auto n2 : g2) {
+	const float me_n2 = me_base[n2];
+	const float* n2_base = similarities + (width * n2);
+	const float n1_n2 = n1_base[n2];
+	const float curr_middle(curr_outer + me_n2);
+	for (const auto n3 : g3) {
+	  const float me_n3 = me_base[n3];
+	  float curr(curr_middle + me_n3);
+	  const float n2_n3 = n2_base[n3];
+	  const float n1_n3 = n1_base[n3];
+	  float v((n1_n2 < me_n1) ? n1_n2 : me_n1);
+	  v = (v < me_n2) ? v : me_n2;
+	  curr += v;
+	  //curr += std::min({n1_n2, me_n1, me_n2});
+	  v = (n1_n3 < me_n1) ? n1_n3 : me_n1;
+	  v = (v < me_n3) ? v : me_n3;
+	  curr += v;
+	  //curr += std::min({n1_n3,me_n1, me_n3});
+	  v = (n2_n3 < me_n2) ? n2_n3 : me_n2;
+	  v = (v < me_n3) ? v : me_n3;
+	  curr += v;
+	  //curr += std::min({n2_n3, me_n2, me_n3});
+	  maxscore = (curr > maxscore) ? curr : maxscore;
+	}
+      }
+    }
+    if (maxscore > -FLT_MAX) score += maxscore;
+  }
+  return score;
+}
+
+float score_complete3(const int score_node, const std::vector< std::vector<int> >& other_groups, const float* const similarities, const int width)
+{
+  const float* const me_base = similarities + (width * score_node);
+  std::vector< std::vector<int> > combinations;
+  comb(other_groups.size(), 2, combinations);
+  float score(0.0f);
+  
+  for (auto const& combination : combinations) {
+    float maxscore = -FLT_MAX;
+    const auto ig1 = combination[0];
+    const auto g1 = other_groups[ig1];
+    const auto ig2 = combination[1];
+    const auto g2 = other_groups[ig2];
+
+    for (const auto n1 : g1) {
+      const float me_n1 = me_base[n1];
+      const float* n1_base = similarities + (width * n1);
+      const float curr_outer(me_n1);
+      for (const auto n2 : g2) {
+	const float me_n2 = me_base[n2];
+	const float* n2_base = similarities + (width * n2);
+	const float n1_n2 = n1_base[n2];
+	float curr(curr_outer + me_n2);
+	float v = (n1_n2 < me_n1) ? n1_n2 : me_n1;
+	v = (v < me_n2) ? v : me_n2;
+	curr += v;
+	maxscore = (curr > maxscore) ? curr : maxscore;
+      }
+    }
+    if (maxscore > -FLT_MAX) score += maxscore;
+  }
+  return score;
+}
+
+
+void maximum_similarities_in_each_group(const int me, const float* const similarities, const int width, const std::vector< std::vector<int> >& other_groups, std::map<int, float>& max_values)
+{
+  const float* base_sim(similarities + (width * me));
+  for (int i = 0; i < other_groups.size(); ++i) {
+    const auto other_group = other_groups[i];
+    float mx(-FLT_MAX);
+    for (const auto other_node : other_group) {
+      const float v(*(base_sim + other_node));
+      mx = (v > mx) ? v : mx;
+    }
+    max_values[i] = mx;
+  }
+}
+
+void top_groups_for_candidate(const int candidate, const float* const similarities, const int width, const std::vector< std::vector<int> >& other_groups, const int num_groups_to_consider, std::vector< std::vector<int> >& top_groups)
+{
+  std::map<int, float> max_values;
+  maximum_similarities_in_each_group(candidate, similarities, width, other_groups, max_values);
+  std::vector<std::pair<int, float> > pairs;
+  sortMapByVal(max_values, pairs, scoreCompare);
+  const int num_groups = std::min({(int)(pairs.size()), num_groups_to_consider});
+  for (int i = 0; i < num_groups; ++i) {
+    top_groups.push_back(other_groups[pairs[i].first]);
+  }
+}
+
+#define NUMGROUPSTOCONSIDER3 40
+#define NUMGROUPSTOCONSIDER4 15
+
+bool CompleteGraphFasterScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
+{
+  // For each group, g_score, to score
+  //  For each node, n_score, in g_score
+  //   Figure out N best other groups, g_others, among all_groups - g_score
+  //
+  std::vector< std::vector<int> > all_groups;
+  for (const auto& g : groups) {
+    all_groups.push_back(g.second);
+  }
+  
+  for (const auto& g : groups) {
+    const auto my_group = g.second;
+    std::vector< std::vector<int> > others(all_groups);
+    auto it = std::find(others.begin(), others.end(), my_group);
+    others.erase(it);
+
+    for (const auto me : my_group) {
+      // Find the strongest hits in each locus
+      std::vector< std::vector<int> > top_groups;
+      if (this->mScoreSize ==  3 || groups.size() < 4) {
+	top_groups_for_candidate(me, similarities, width, others, NUMGROUPSTOCONSIDER3, top_groups);
+	scores[me] = score_complete3(me, top_groups, similarities, width);
+      }
+      else {
+	top_groups_for_candidate(me, similarities, width, others, NUMGROUPSTOCONSIDER4, top_groups);
+	scores[me] = score_complete4(me, top_groups, similarities, width);
+      }
+    }
+  }
+  return true;
+}
+

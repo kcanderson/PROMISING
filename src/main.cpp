@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     
     // Read in command-line options.
     cmd.parse(argc, argv);
-
+    
     //// Read in groups from file
     // std::map<int, int> nodeDegreeGroups;
     // std::string gfilename = groupsFilename.getValue();
@@ -168,11 +168,12 @@ int main(int argc, char** argv) {
 
     // Make module scorer
     if (cgraphSize == 4) {
-      moduleScorer = new CompleteGraphScorer4();
+      //moduleScorer = new CompleteGraphScorer4();
+      moduleScorer = new CompleteGraphFasterScorer(4);
     }
     else {
       if (method.getValue() == "complete") {
-	moduleScorer = new CompleteGraphScorer();
+	moduleScorer = new CompleteGraphFasterScorer(3);
       } else {
 	moduleScorer = new FastScorer();
       }

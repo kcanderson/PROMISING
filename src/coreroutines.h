@@ -33,6 +33,7 @@ void flattenGroups(const TGroups& groups, std::vector<std::string>& entries);
 void mapGroupsToIndices(const TGroups& groups, TIndexMap& map, TIndicesGroups& indicesGroups);
 void printMatrix(const float* buffer, const int rows, const int cols);
 float phi(float x);
+void comb(int N, int K, std::vector< std::vector<int> >& combinations);
 
 template <typename T> void printGroups(const std::vector< std::vector<T> >& groups) {
   for (auto const &g : groups) {

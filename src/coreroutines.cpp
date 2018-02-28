@@ -262,4 +262,21 @@ float phi(float x)
   return 0.5*(1.0 + sign*y);
 }
 
+void comb(int N, int K, std::vector< std::vector<int> >& combinations)
+{
+  std::string bitmask(K, 1); // K leading 1's
+  bitmask.resize(N, 0); // N-K trailing 0's
 
+  //std::vector< std::vector<int> > combs;
+  // print integers and permute bitmask
+  do {
+    std::vector<int> v;
+    for (int i = 0; i < N; ++i) // [0..N-1] integers
+      {
+	if (bitmask[i]) v.push_back(i);
+	//if (bitmask[i]) std::cout << " " << i;
+      }
+    //std::cout << std::endl;
+    combinations.push_back(v);
+  } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
+}

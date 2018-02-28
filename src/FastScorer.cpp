@@ -99,18 +99,21 @@ bool FastScorer::ScoreModule(const float* const similarities, const int width, c
       const int* cindexBuffer = indexBuffer;
       for (int ii = 0; ii < endloop; ++ii) {
       	const int iii = cindexBuffer[ii];
-      	const float* v = similarities + width * iii;
+      	const float* base_iii = similarities + width * iii;
+	const float me_iii(sim[iii]);
       	for (int jj = ii + 1; jj < endloop; ++jj) {
       	  const int jjj = cindexBuffer[jj];
-      	  //score += v[jjj];
-
-      	  const float vvv = v[jjj];
-      	  const float a = sim[iii];
-      	  float b = sim[jjj];
-      	  b = (a < b) ? a : b;
-      	  //b = (a > b) ? a : b;
-      	  b = (b < vvv) ? b : vvv;
-      	  score += b;
+	  const float me_jjj(sim[jjj]);
+      	  const float iii_jjj(base_iii[jjj]);
+	  float val = (iii_jjj < me_iii) ? iii_jjj : me_iii;
+	  val = (val < me_jjj) ? val : me_jjj;
+	  //float val(MIN(iii_jjj, MIN(me_iii, me_jjj)));
+      	  //float b = sim[jjj];
+	  //printf("%i: %i %i= %f\n", me, iii, jjj, vvv);
+      	  //b = (a < b) ? a : b;
+      	  //b = (b < vvv) ? b : vvv;
+      	  //score += b;
+	  score += val;
       	}
       }
       scores[me] = score;
@@ -139,6 +142,8 @@ void FastScorer::BriefSummary(TScoreMap& scores, TReverseIndexMap& rmap, std::os
 
 void FastScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TIndicesGroups& groups, std::ostream& out) const {
 
+#define OLD_FORMAT 0
+#if OLD_FORMAT
   int l = 1;
   for (auto const &g : groups) {
     out << "----------------" << std::endl;
@@ -148,11 +153,45 @@ void FastScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TI
       locusScores[e] = scores[e];
     }
     std::vector<std::pair<int, float> > pairs;
-    sortMapByVal(locusScores, pairs, scoreCompare2);
+    sortMapByVal(locusScores, pairs, scoreCompare);
     for (auto const &e : pairs) {
       out << rmap[e.first] << "\t" << e.second << std::endl;
     }
     l++;
   }
+#else
+  std::map<int, std::string> groupMap;
+  int i = 0;
+  for (auto const &g : groups) {
+    //std::string locus = "Locus " + std::to_string(i++);
+    for (auto gene : g.second) {
+      groupMap[gene] = g.first;
+    }
+  }
+
+  std::vector<std::pair<int, float> > pairs;
+  sortMapByVal(scores, pairs, scoreCompare2);
+  out << "locus\tgene\tscore" << std::endl;
+  for (auto const &e : pairs) {
+    out << groupMap[e.first] << "\t" << rmap[e.first] << "\t" << scores[e.first] << std::endl;
+  }
+#endif
+
+  
+  // int l = 1;
+  // for (auto const &g : groups) {
+  //   out << "----------------" << std::endl;
+  //   out << "Locus " << l << std::endl << "----------------" << std::endl;
+  //   TScoreMap locusScores;
+  //   for (auto const &e : g.second) {
+  //     locusScores[e] = scores[e];
+  //   }
+  //   std::vector<std::pair<int, float> > pairs;
+  //   sortMapByVal(locusScores, pairs, scoreCompare2);
+  //   for (auto const &e : pairs) {
+  //     out << rmap[e.first] << "\t" << e.second << std::endl;
+  //   }
+  //   l++;
+  // }
   
 }
