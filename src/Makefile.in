@@ -246,7 +246,6 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
-runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -255,7 +254,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -std=c++0x
 AM_LDFLAGS = -llapack -lblas
 promising_SOURCES = coreroutines.cpp CompleteGraphScorer.cpp PValueModuleScorer.cpp main.cpp FastScorer.cpp
 reglaplacian_SOURCES = graph_kernels.cpp
