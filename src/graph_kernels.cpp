@@ -28,8 +28,8 @@ void inverse(float* A, int N)
     sgetrf_(&N,&N,A,&N,IPIV,&INFO);
     sgetri_(&N,A,&N,IPIV,WORK,&LWORK,&INFO);
 
-    delete IPIV;
-    delete WORK;
+    delete [] IPIV;
+    delete [] WORK;
 }
 
 void laplacian(float* a, int n) {
