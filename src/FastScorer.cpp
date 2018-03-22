@@ -195,3 +195,136 @@ void FastScorer::LongSummary(TScoreMap& scores, TReverseIndexMap& rmap, const TI
   // }
   
 }
+
+
+bool SimpleScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
+{
+  TIndicesGroups goodGroups;
+  for (auto const& group : groups) {
+    // intersection between indicesToScore and group not nil?
+    TIndices g;
+    for (auto i : group.second) {
+      if (std::find(indicesToScore.begin(), indicesToScore.end(), i) != indicesToScore.end()) {
+	g.push_back(i);
+      }
+    }
+    if (g.size() > 0) {
+      //goodGroups.push_back(g);
+      goodGroups[group.first] = g;
+    }
+  }
+  
+  const int numGroups = groups.size();
+  
+  int* const indexBuffer = (int*)malloc(sizeof(int) * numGroups);
+  if (indexBuffer == 0) {
+    printf("Could not allocate buffer of %d bytes\n", (int)sizeof(int) * numGroups);
+    return false;
+  }
+
+  for (auto const& group : goodGroups) {
+    for (auto i : group.second) {
+      scores[i] = 0.0f;
+    }
+  }
+  
+  for (auto const& group : goodGroups) {
+    //for (int i = 0; i < group.size(); ++i) {
+    //const auto me = group[i];
+    for (auto const& me : group.second) {
+      const float* const sim = similarities + width * me;
+      TIndicesGroups otherGroups(groups);
+      auto it = std::find(otherGroups.begin(), otherGroups.end(), group);
+      otherGroups.erase(it);
+      //printf("%i, %i\n", groups.size(), otherGroups.size());
+      int numothers = 0;
+      //indexBuffer[numothers++] = me;
+      float score = 0.0f;
+      for (auto const& othergroup : otherGroups) {
+  	int maxnode = -1;
+  	float maxscore = -FLT_MAX;
+  	//for (const auto j : othergroup) {
+	//for (int j = 0; j < othergroup.size(); ++j) {
+	//const int ot = othergroup[j];
+	for (const auto& ot : othergroup.second) {
+  	  const float sc = sim[ot];
+	  //maxnode = (sc > maxscore) ? ot : maxnode;
+	  //maxscore = (sc > maxscore) ? sc : maxscore;
+  	  if (sc > maxscore) {
+  	    maxnode = ot;
+  	    maxscore = sc;
+  	  }
+	}
+  	if (maxnode != -1) {
+  	  indexBuffer[numothers++] = maxnode;
+	  score += maxscore;
+  	}
+      }
+      scores[me] = score;
+    }
+  }
+
+  free(indexBuffer);
+
+  return true;
+
+}
+
+
+
+bool SumScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
+{
+  TIndicesGroups goodGroups;
+  for (auto const& group : groups) {
+    // intersection between indicesToScore and group not nil?
+    TIndices g;
+    for (auto i : group.second) {
+      if (std::find(indicesToScore.begin(), indicesToScore.end(), i) != indicesToScore.end()) {
+	g.push_back(i);
+      }
+    }
+    if (g.size() > 0) {
+      //goodGroups.push_back(g);
+      goodGroups[group.first] = g;
+    }
+  }
+  
+  const int numGroups = groups.size();
+  for (auto const& group : goodGroups) {
+    for (auto i : group.second) {
+      scores[i] = 0.0f;
+    }
+  }
+  
+  for (auto const& group : goodGroups) {
+    //for (int i = 0; i < group.size(); ++i) {
+    //const auto me = group[i];
+    for (auto const& me : group.second) {
+      const float* const sim = similarities + width * me;
+      TIndicesGroups otherGroups(groups);
+      auto it = std::find(otherGroups.begin(), otherGroups.end(), group);
+      otherGroups.erase(it);
+      //printf("%i, %i\n", groups.size(), otherGroups.size());
+      int numothers = 0;
+      //indexBuffer[numothers++] = me;
+      
+      for (auto const& othergroup : otherGroups) {
+	const int othergroupsize = othergroup.second.size();
+  	int maxnode = -1;
+  	float maxscore = -FLT_MAX;
+  	//for (const auto j : othergroup) {
+	//for (int j = 0; j < othergroup.size(); ++j) {
+	//const int ot = othergroup[j];
+	float score = 0.0f;
+	for (const auto& ot : othergroup.second) {
+  	  const float sc = sim[ot];
+	  score += (sc / othergroupsize);
+	}
+	scores[me] += score;
+      }
+    }
+  }
+
+  return true;
+
+}

@@ -21,3 +21,18 @@ public:
 };
 
 
+class SimpleScorer : public FastScorer {
+ public:
+  SimpleScorer(void) {}
+  bool ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups,
+		   const TIndices& indicesToScore, TScoreMap& scores) const;
+  
+};
+
+class SumScorer : public FastScorer {
+ public:
+  SumScorer(void) {}
+  bool ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups,
+		   const TIndices& indicesToScore, TScoreMap& scores) const;
+  
+};

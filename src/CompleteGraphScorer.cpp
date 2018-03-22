@@ -1,4 +1,5 @@
 /* ---------------------------------------------------------------------------
+
 ** This software is in the public domain, furnished "as is", without technical
 ** support, and with no warranty, express or implied, as to its usefulness for
 ** any purpose.
@@ -14,6 +15,7 @@
 #include "string.h"
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
 
 typedef std::vector<int> TInts;
 
@@ -353,18 +355,18 @@ float score_complete4(const int score_node, const std::vector< std::vector<int> 
 	  float curr(curr_middle + me_n3);
 	  const float n2_n3 = n2_base[n3];
 	  const float n1_n3 = n1_base[n3];
-	  float v((n1_n2 < me_n1) ? n1_n2 : me_n1);
-	  v = (v < me_n2) ? v : me_n2;
-	  curr += v;
-	  //curr += std::min({n1_n2, me_n1, me_n2});
-	  v = (n1_n3 < me_n1) ? n1_n3 : me_n1;
-	  v = (v < me_n3) ? v : me_n3;
-	  curr += v;
-	  //curr += std::min({n1_n3,me_n1, me_n3});
-	  v = (n2_n3 < me_n2) ? n2_n3 : me_n2;
-	  v = (v < me_n3) ? v : me_n3;
-	  curr += v;
-	  //curr += std::min({n2_n3, me_n2, me_n3});
+	  float v((me_n1 < me_n2) ? me_n1 : me_n2);
+	  v = (v < n1_n2) ? v : n1_n2;
+	  //curr += v;
+	  curr += n1_n2;
+	  v = (me_n1 < me_n3) ? me_n1 : me_n3;
+	  v = (v < n1_n3) ? v : n1_n3;
+	  //curr += v;
+	  curr += n1_n3;
+	  v = (me_n2 < me_n3) ? me_n2 : me_n3;
+	  v = (v < n2_n3) ? v : n2_n3;
+	  //curr += v;
+	  curr += n2_n3;
 	  maxscore = (curr > maxscore) ? curr : maxscore;
 	}
       }
@@ -373,6 +375,84 @@ float score_complete4(const int score_node, const std::vector< std::vector<int> 
   }
   return score;
 }
+
+// assignment into a
+#define MIN(a, b, c)				\
+  a = a;
+//  a = (a < b) ? a : b;			\
+//  a = (a < c) ? a : c;
+
+float score_complete5(const int score_node, const std::vector< std::vector<int> >& other_groups, const float* const similarities, const int width)
+{
+  const float* const me_base = similarities + (width * score_node);
+  std::vector< std::vector<int> > combinations;
+  comb(other_groups.size(), 4, combinations);
+  float score(0.0f);
+  
+  for (auto const& combination : combinations) {
+    float maxscore = -FLT_MAX;
+    const auto ig1 = combination[0];
+    const auto g1 = other_groups[ig1];
+    const auto ig2 = combination[1];
+    const auto g2 = other_groups[ig2];
+    const auto ig3 = combination[2];
+    const auto g3 = other_groups[ig3];
+    const auto ig4 = combination[3];
+    const auto g4 = other_groups[ig4];
+
+    for (const auto n1 : g1) {
+      const float me_n1 = me_base[n1];
+      const float* n1_base = similarities + (width * n1);
+      const float curr_outer(me_n1);
+      for (const auto n2 : g2) {
+	const float me_n2 = me_base[n2];
+	const float* n2_base = similarities + (width * n2);
+	// n1_n2
+	const float n1_n2 = n1_base[n2];
+	float v(n1_n2);
+	MIN(v, me_n1, me_n2);
+	float curr_middle(curr_outer + me_n2 + v);
+	for (const auto n3 : g3) {
+	  const float me_n3 = me_base[n3];
+	  const float* n3_base = similarities + (width * n3);
+	  // n1_n3
+	  const float n1_n3 = n1_base[n3];
+	  v = n1_n3;
+	  MIN(v, me_n1, me_n3);
+	  // n2_n3
+	  const float n2_n3 = n2_base[n3];
+	  float vv(n2_n3);
+	  MIN(vv, me_n2, me_n3);
+	  
+	  const float curr_middle2(curr_middle + me_n3 + v + vv);
+	  
+	  for (const auto n4 : g4) {
+	    const float me_n4 = me_base[n4];
+	    float curr(curr_middle2 + me_n4);
+	    // n1_n4
+	    v = n1_base[n4];
+	    MIN(v, me_n1, me_n4);
+	    curr += v;
+	    // n2_n4
+	    v = n2_base[n4];
+	    MIN(v, me_n2, me_n4);
+	    curr += v;
+	    // n3_n4
+	    v = n2_base[n4];
+	    MIN(v, me_n3, me_n4);
+	    curr += v;
+	    
+	    maxscore = (curr > maxscore) ? curr : maxscore;
+	  }
+	}
+      }
+    }
+    if (maxscore > -FLT_MAX) score += maxscore;
+  }
+  
+  return score;
+}
+
 
 float score_complete3(const int score_node, const std::vector< std::vector<int> >& other_groups, const float* const similarities, const int width)
 {
@@ -397,9 +477,12 @@ float score_complete3(const int score_node, const std::vector< std::vector<int> 
 	const float* n2_base = similarities + (width * n2);
 	const float n1_n2 = n1_base[n2];
 	float curr(curr_outer + me_n2);
-	float v = (n1_n2 < me_n1) ? n1_n2 : me_n1;
-	v = (v < me_n2) ? v : me_n2;
-	curr += v;
+	float v = (me_n1 < me_n2) ? me_n1 : me_n2;
+	v = (v < n1_n2) ? v : n1_n2;
+	//float v = (n1_n2 < me_n1) ? n1_n2 : me_n1;
+	//v = (v < me_n2) ? v : me_n2;
+	//curr += v;
+	curr += n1_n2;
 	maxscore = (curr > maxscore) ? curr : maxscore;
       }
     }
@@ -435,8 +518,9 @@ void top_groups_for_candidate(const int candidate, const float* const similariti
   }
 }
 
-#define NUMGROUPSTOCONSIDER3 40
-#define NUMGROUPSTOCONSIDER4 15
+#define NUMGROUPSTOCONSIDER3 150
+#define NUMGROUPSTOCONSIDER4 100
+#define NUMGROUPSTOCONSIDER5 35
 
 bool CompleteGraphFasterScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
 {
@@ -454,7 +538,7 @@ bool CompleteGraphFasterScorer::ScoreModule(const float* const similarities, con
     std::vector< std::vector<int> > others(all_groups);
     auto it = std::find(others.begin(), others.end(), my_group);
     others.erase(it);
-
+    printf("group %s\n", g.first.c_str());
     for (const auto me : my_group) {
       // Find the strongest hits in each locus
       std::vector< std::vector<int> > top_groups;
@@ -462,12 +546,88 @@ bool CompleteGraphFasterScorer::ScoreModule(const float* const similarities, con
 	top_groups_for_candidate(me, similarities, width, others, NUMGROUPSTOCONSIDER3, top_groups);
 	scores[me] = score_complete3(me, top_groups, similarities, width);
       }
-      else {
+      else if (this->mScoreSize == 4 or groups.size() < 5) {
 	top_groups_for_candidate(me, similarities, width, others, NUMGROUPSTOCONSIDER4, top_groups);
 	scores[me] = score_complete4(me, top_groups, similarities, width);
       }
+      else {
+	top_groups_for_candidate(me, similarities, width, others, NUMGROUPSTOCONSIDER5, top_groups);
+	scores[me] = score_complete5(me, top_groups, similarities, width);
+      }
     }
   }
+  return true;
+}
+
+void randomize_matrix(float* const similarities, const int width, const int numShuffles)
+{
+  for (int i = 0; i < numShuffles; ++i) {
+    const int i1 = rand() % width;
+    const int i2 = rand() % width;
+    const int j1 = rand() % width;
+    const int j2 = rand() % width;
+    const float v1 = similarities[width * i1 + i2];
+    const float v2 = similarities[width * j1 + j2];
+    similarities[width * i1 + i2] = v2;
+    similarities[width * i2 + i1] = v2;
+    similarities[width * j1 + j2] = v1;
+    similarities[width * j2 + j1] = v1;
+  }
+}
+
+
+bool PValCompleteScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
+{
+  CompleteGraphFasterScorer scorer(3);
+
+  TScoreMap myscores;
+  scorer.ScoreModule(similarities, width, groups, indicesToScore, myscores);
+
+  // Copy matrix
+  const int numBytes(sizeof(float) * width * width);
+  float* const scratch((float*)malloc(numBytes));
+  if (scratch == 0) {
+    printf("Could not allocate buffer of %i bytes.\n", numBytes);
+    return false;
+  }
+  memcpy(scratch, similarities, numBytes);
+
+  std::map<int, std::vector<float> > scoresMap;
+  for (const auto &g : groups) {
+    for (auto i : g.second) {
+      //scoresMap[i].push_back(1.0);
+    }
+  }
+  const int numIterations(30);
+  for (int i = 0; i < numIterations; ++i) {
+    printf("iteration %i\n", i);
+    randomize_matrix(scratch, width, (width * width) / 2);
+    TScoreMap permuted_scores;
+    scorer.ScoreModule(scratch, width, groups, indicesToScore, permuted_scores);
+    for (const auto &score : permuted_scores) {
+      scoresMap[score.first].push_back(score.second);
+    }
+  }
+
+  for (const auto &permutations : scoresMap) {
+    const float real_score(myscores[permutations.first]);
+    //int acc(0);
+    float tot(0.0f);
+    for (const auto s : permutations.second) {
+      //if (real_score > s) acc++;
+      tot += s;
+    }
+    const float m = tot / permutations.second.size();
+    tot = 0.0f;
+    for (const auto s : permutations.second) {
+      //if (real_score > s) acc++;
+      tot += fabs(s - m);
+    }
+    const float std = tot / permutations.second.size();
+    
+    scores[permutations.first] = (real_score - m) / std;
+  }
+  
   return true;
 }
 

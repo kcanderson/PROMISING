@@ -37,3 +37,10 @@ class CompleteGraphFasterScorer : public CompleteGraphScorer {
  private:
   int mScoreSize;
 };
+
+class PValCompleteScorer : public CompleteGraphScorer {
+ public:
+  PValCompleteScorer() {}
+  bool ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups,
+		   const TIndices& indicestoScore, TScoreMap& scores) const;
+};

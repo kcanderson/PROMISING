@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
     cmd.add(cGroupSize);
 
-    TCLAP::ValueArg<std::string> method("z", "method", "Scoring method, complete or fast", false, "complete", "string");
+    TCLAP::ValueArg<std::string> method("z", "method", "Scoring method, complete, fast, simple", false, "complete", "string");
     cmd.add(method);
 
     TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
@@ -130,8 +130,8 @@ int main(int argc, char** argv) {
     // const int numEntriesInGroups = entries.size();
 
     int cgraphSize = cGroupSize.getValue();
-    if (cgraphSize != 3 && cgraphSize != 4) {
-      printf("Inappropriate complete graph size, %d. Only accept 3 or 4.", cgraphSize);
+    if (cgraphSize != 3 && cgraphSize != 4 && cgraphSize != 5) {
+      printf("Inappropriate complete graph size, %d. Only accept 3, 4, or 5.", cgraphSize);
       exit(-1);
     }
 
@@ -167,13 +167,18 @@ int main(int argc, char** argv) {
     int matrixWidth(0);
 
     // Make module scorer
-    if (cgraphSize == 4) {
-      //moduleScorer = new CompleteGraphScorer4();
-      moduleScorer = new CompleteGraphFasterScorer(4);
+    if (cgraphSize > 3) {
+      moduleScorer = new CompleteGraphFasterScorer(cgraphSize);
     }
     else {
       if (method.getValue() == "complete") {
 	moduleScorer = new CompleteGraphFasterScorer(3);
+      } else if (method.getValue() == "simple") {
+	moduleScorer = new SimpleScorer();
+      } else if (method.getValue() == "sum") {
+	moduleScorer = new SumScorer();
+      } else if (method.getValue() == "test") {
+	moduleScorer = new PValCompleteScorer();
       } else {
 	moduleScorer = new FastScorer();
       }
