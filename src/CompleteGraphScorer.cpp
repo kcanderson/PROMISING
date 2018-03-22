@@ -520,7 +520,7 @@ void top_groups_for_candidate(const int candidate, const float* const similariti
 
 #define NUMGROUPSTOCONSIDER3 150
 #define NUMGROUPSTOCONSIDER4 100
-#define NUMGROUPSTOCONSIDER5 35
+#define NUMGROUPSTOCONSIDER5 10
 
 bool CompleteGraphFasterScorer::ScoreModule(const float* const similarities, const int width, const TIndicesGroups& groups, const TIndices& indicesToScore, TScoreMap& scores) const
 {
