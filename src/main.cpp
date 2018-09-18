@@ -113,6 +113,9 @@ int main(int argc, char** argv) {
 
     TCLAP::SwitchArg multiple("l", "multiple", "Do multiple runs", false);
     cmd.add(multiple);
+
+    TCLAP::SwitchArg clamp("c", "clamp", "Clamp complete graph scorers", false);
+    cmd.add(clamp);
     
     // Read in command-line options.
     cmd.parse(argc, argv);
@@ -167,23 +170,19 @@ int main(int argc, char** argv) {
     int matrixWidth(0);
 
     // Make module scorer
-    if (cgraphSize > 3) {
-      moduleScorer = new CompleteGraphFasterScorer(cgraphSize);
-    }
-    else {
-      if (method.getValue() == "complete") {
-	moduleScorer = new CompleteGraphFasterScorer(3);
-      } else if (method.getValue() == "simple") {
-	moduleScorer = new SimpleScorer();
-      } else if (method.getValue() == "sum") {
-	moduleScorer = new SumScorer();
-      } else if (method.getValue() == "test") {
-	moduleScorer = new PValCompleteScorer();
-      } else {
-	moduleScorer = new FastScorer();
-      }
-    }
     
+    if (method.getValue() == "complete") {
+      moduleScorer = new CompleteGraphFasterScorer(cgraphSize, clamp.getValue());
+    } else if (method.getValue() == "simple") {
+      moduleScorer = new SimpleScorer();
+    } else if (method.getValue() == "sum") {
+      moduleScorer = new SumScorer();
+    } else if (method.getValue() == "test") {
+      moduleScorer = new PValCompleteScorer();
+    } else {
+      moduleScorer = new FastScorer();
+    }
+      
     if (!multiple.getValue()) {
 
       // Read in groups from file
