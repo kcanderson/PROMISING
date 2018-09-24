@@ -111,13 +111,9 @@ int main(int argc, char** argv) {
     //TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
     //cmd.add(degree);
 
-<<<<<<< HEAD
     //TCLAP::SwitchArg multiple("l", "multiple", "Do multiple runs", false);
     //cmd.add(multiple);
-=======
-    TCLAP::SwitchArg multiple("l", "multiple", "Do multiple runs", false);
-    cmd.add(multiple);
->>>>>>> 93ac9ae458565970174fc31b28219df99b456059
+
 
     TCLAP::SwitchArg clamp("c", "clamp", "Clamp complete graph scorers", false);
     cmd.add(clamp);
@@ -175,7 +171,6 @@ int main(int argc, char** argv) {
     int matrixWidth(0);
 
     // Make module scorer
-<<<<<<< HEAD
     std::string meth = method.getValue();
     std::transform(meth.begin(), meth.end(), meth.begin(), ::tolower);
     if (meth == "max-3sets") {
@@ -195,23 +190,6 @@ int main(int argc, char** argv) {
       
     //if (!multiple.getValue()) {
     if (true) {
-=======
-    
-    if (method.getValue() == "complete") {
-      moduleScorer = new CompleteGraphFasterScorer(cgraphSize, clamp.getValue());
-    } else if (method.getValue() == "simple") {
-      moduleScorer = new SimpleScorer();
-    } else if (method.getValue() == "sum") {
-      moduleScorer = new SumScorer();
-    } else if (method.getValue() == "test") {
-      moduleScorer = new PValCompleteScorer();
-    } else {
-      moduleScorer = new FastScorer();
-    }
-      
-    if (!multiple.getValue()) {
->>>>>>> 93ac9ae458565970174fc31b28219df99b456059
-
       // Read in groups from file
       std::string gfilename = groupsFilename.getValue();
       std::ifstream ginfile(gfilename);
