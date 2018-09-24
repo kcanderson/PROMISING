@@ -538,7 +538,7 @@ bool CompleteGraphFasterScorer::ScoreModule(const float* const similarities, con
     std::vector< std::vector<int> > others(all_groups);
     auto it = std::find(others.begin(), others.end(), my_group);
     others.erase(it);
-    printf("group %s\n", g.first.c_str());
+    //printf("group %s\n", g.first.c_str());
     for (const auto me : my_group) {
       // Find the strongest hits in each locus
       std::vector< std::vector<int> > top_groups;
