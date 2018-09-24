@@ -19,9 +19,43 @@ At the moment, this has only been tested on a Linux machine with gcc.
 
 A BLAS library is requrired to compute the Regularized Laplacian of the given protein network. A fast version is recommended for networks with more than a thousand nodes.
 
-## File formats
 
-GMT files are used to define gene sets. In a GMT file, each line represents one gene set. All items within a line are tab delimited. The first column is the set's name, the second a description, and the next columns are the genes in the set.
+
+## Usage
+
+```
+promising  [-c] [-m <string>] [-o <string>] [-p <int>] -g <string>
+           -s <string> [--] [--version] [-h]
+
+
+Where: 
+   -g <string>,  --groups <string>
+     (required)  Groups file
+
+   -s <string>,  --similarities <string>
+     (required)  Similarity matrix
+	 
+   -m <string>,  --method <string>
+     Scoring method, SUM, MAX, MAX-CLIQUE, MAX-3SETS, MAX-4SETS
+
+   -o <string>,  --outfile <string>
+     Output summary file
+
+   --version
+     Displays version information and exits.
+
+   -h,  --help
+     Displays usage information and exits.
+
+```
+
+### Required arguments
+
+The program has two required arguments, one defining the gene sets, the other defining a matrix of similarities between all genes. All other arguments/flags are optional.
+
+### Gene sets (`-g`)
+
+GMT files are used to define gene sets. In a GMT file, each line represents one gene set. All items within a line are tab delimited. The first column is the set's name, the second a description, and the next columns are the genes in the set. Note that the gene sets must be disjoint.
 
 Example:
 ```
@@ -30,15 +64,10 @@ Set 2    description    D    E
 Set 3    description    F    G    H    I
 ```
 
-Networks are defined with three entries per line: protein1, protein2, and the score. The items in each line are tab delimited.
 
-Example:
-```
-A    D    1.0
-B    C    1.0
-```
+### Similarity matrix (`-s`)
 
-Matrices are described in a simple, human readable format. The first line has the tab-delimited column names. The the matrix is given line-by-line, each continuous value delmited with a tab. The continuous values may be in scientific notation.
+The similarity matrix defines the similarities among all the genes contained within the gene sets. Matrices are described in a simple, human readable format. The first line has the tab-delimited column/row names (colum and row order must be the same). Then the matrix is given line-by-line. Columns are delmited with a tab. The continuous values may be in scientific notation. Note that matrices are assumed to be symmetric (hence half of the matrix is redundant information-- we intend to use an alternative matrix format in the future). 
 
 Example:
 ```
@@ -49,41 +78,65 @@ A    B    C    D
 1.0  0.0  0.0  0.0
 ```
 
-## Usage
-```
-USAGE: 
 
-   promising  [-d <string>] [-m <string>] [-s <int>] [-o
-              <string>] [-p <int>] -g <string> [--]
-              [--version] [-h]
+### Optional arguments
 
-Where: 
+The following arguments may be supplied.
 
-   -o <string>,  --outfile <string>
-     Output summary file
+#### Output summary file (`-o`)
 
-   -p <int>,  --pval <int>
-     Pvalue iterations
-
-   -g <string>,  --groups <string>
-     (required)  Groups file
-
-   -m <string>,  --matrix <string>
-     (required)  Matrix file
-	 
-   -d <string>,  --degree_groups <string>
-     Degree groups for node permutations
+Output the results in a tab-delimited format with three columns (locus, gene, score). Example:
 
 ```
+locus    gene            score
+Locus5   FANCE           0.372794
+Locus1   FANCC           0.321366
+Locus7   FANCD2          0.311326
+Locus13  FANCA           0.296143
+Locus2   FANCF           0.295335
+Locus10  BRCA2           0.267046
+Locus10  RP11-298P3.4    0.245363
+Locus3   PALB2           0.220358
+Locus9   ERCC4           0.198534
+Locus11  FANCI           0.191027
+Locus12  MYOG            0.189491
+```
 
-An example network has been included in the "data" directory. A few example genesets are found in "data/examples".
 
-### Examples
+#### Method (`-m`)
 
-Trying out the example Fanconi Anemia geneset, 
+The method used to calculate candidate scores. Possible methods as `SUM`, `MAX`, `MAX-CLIQUE`, `MAX-3SETS`, and `MAX-4SETS`. The default is `MAX-4SETS`.
+
+*SUM*
+
+A candidate's score is the sum of its similarities to all candidates in opposing genesets. The summation is scaled by the size of the given gene set, because sets are not required to contain the same number of candidates.
+
+*MAX*
+
+A candidate's score is the sum of the most similar candidate in each opposing set.
+
+*MAX-CLIQUE*
+
+A candidate's score is calculated by first finding its best partner on each opposing set, then taking the sum of all pairwise similarities among the partners and the candidate.
+
+*MAX-3SETS*
+
+Considering every combination of gene sets of size three that include a particular candidate, the candidate is scored by taking the sum of the *MAX* method (see above) for the candidate in each of the subsets.
+
+
+*MAX-4SETS*
+
+Considering every combination of gene sets of size four that include a particular candidate, the candidate is scored by taking the sum of the *MAX* method (see above) for the candidate in each of the subsets. Same as *MAX-3SETS*, but considers 4 gene sets at a time.
+
+
+
+
+## Example
+
+An example network has been included in the "data" directory. A few example genesets are found in "data/examples". Trying out the example Fanconi Anemia geneset, 
 
 ```
-promising -n data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.gmt -o summary.txt
+promising -s data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.gmt -o summary.txt
 ```
 
 will produce the following output to stdout.
@@ -114,7 +167,7 @@ It will also write a slighly longer summary to the file "summary.txt".
 Genes can also be scored on an empirical p-value (see upcoming publication). To do so, use the -p flag with the number of iterations. For example,
 
 ```
-promising -n data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.gmt -o summary.txt -p 10000
+promising -s data/string_reglaplacian_notextmining_network.tsv -g data/examples/fanconi_anemia.gmt -o summary.txt -p 10000
 ```
 
 will run the method 10,000 times with random sets of genes the same size as what was input. It will then calculate empirical p-values. It will also report adjusted p-values using the Bonferroni method to control for the FWER.
@@ -147,6 +200,19 @@ Where:
    -n <string>,  --network <string>
      (required)  Network file
 ```
+
+
+### Input file
+
+
+Networks are defined with three entries per line: protein1, protein2, and the score. The items in each line are tab delimited.
+
+Example:
+```
+A    D    1.0
+B    C    1.0
+```
+
 
 ## License
 

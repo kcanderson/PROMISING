@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
     // Command-line parsing
     TCLAP::CmdLine cmd("Prioritization of candidate genes in disjoint sets.", ' ', "0.9");
-    TCLAP::ValueArg<std::string> netFilename("m", "matrix", "Adjacency matrix", true, "", "string");
+    TCLAP::ValueArg<std::string> netFilename("s", "similarities", "Similarity matrix", true, "", "string");
     cmd.add(netFilename);
     TCLAP::ValueArg<std::string> groupsFilename("g", "groups", "Groups file", true, "", "string");
     cmd.add(groupsFilename);
@@ -102,17 +102,17 @@ int main(int argc, char** argv) {
     cmd.add(pvalIterations);
     TCLAP::ValueArg<std::string> outFilename("o", "outfile", "Output summary file", false, "", "string");
     cmd.add(outFilename);
-    TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
-    cmd.add(cGroupSize);
+    //TCLAP::ValueArg<int> cGroupSize("s", "size", "Complete graph group size", false, 3, "int");
+    //cmd.add(cGroupSize);
 
-    TCLAP::ValueArg<std::string> method("z", "method", "Scoring method, complete, fast, simple", false, "complete", "string");
+    TCLAP::ValueArg<std::string> method("m", "method", "Scoring method, SUM, MAX, MAX-CLIQUE, MAX-3SETS, MAX-4SETS", false, "MAX-4SETS", "string");
     cmd.add(method);
 
-    TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
-    cmd.add(degree);
+    //TCLAP::ValueArg<std::string> degree("d", "degree_groups", "Degree groups for node permutations", false, "", "string");
+    //cmd.add(degree);
 
-    TCLAP::SwitchArg multiple("l", "multiple", "Do multiple runs", false);
-    cmd.add(multiple);
+    //TCLAP::SwitchArg multiple("l", "multiple", "Do multiple runs", false);
+    //cmd.add(multiple);
 
     TCLAP::SwitchArg clamp("c", "clamp", "Clamp complete graph scorers", false);
     cmd.add(clamp);
@@ -132,11 +132,11 @@ int main(int argc, char** argv) {
     // flattenGroups<std::string>(groups, entries);
     // const int numEntriesInGroups = entries.size();
 
-    int cgraphSize = cGroupSize.getValue();
-    if (cgraphSize != 3 && cgraphSize != 4 && cgraphSize != 5) {
-      printf("Inappropriate complete graph size, %d. Only accept 3, 4, or 5.", cgraphSize);
-      exit(-1);
-    }
+    //int cgraphSize = cGroupSize.getValue();
+    //if (cgraphSize != 3 && cgraphSize != 4 && cgraphSize != 5) {
+    //printf("Inappropriate complete graph size, %d. Only accept 3, 4, or 5.", cgraphSize);
+    //exit(-1);
+    //    }
 
     // Do we calculate a p-value?
     int pIterations = pvalIterations.getValue();
@@ -170,20 +170,25 @@ int main(int argc, char** argv) {
     int matrixWidth(0);
 
     // Make module scorer
-    
-    if (method.getValue() == "complete") {
-      moduleScorer = new CompleteGraphFasterScorer(cgraphSize, clamp.getValue());
-    } else if (method.getValue() == "simple") {
+    std::string meth = method.getValue();
+    std::transform(meth.begin(), meth.end(), meth.begin(), ::tolower);
+    if (meth == "max-3sets") {
+      moduleScorer = new CompleteGraphFasterScorer(3, clamp.getValue());
+    } else if (meth == "max-4sets" ) {
+      moduleScorer = new CompleteGraphFasterScorer(4, clamp.getValue());
+    } else if (meth == "max") {
       moduleScorer = new SimpleScorer();
-    } else if (method.getValue() == "sum") {
+    } else if (meth == "sum") {
       moduleScorer = new SumScorer();
-    } else if (method.getValue() == "test") {
-      moduleScorer = new PValCompleteScorer();
-    } else {
+    } else if (meth == "max-clique") {
       moduleScorer = new FastScorer();
+    } else {
+      printf("Error with method: %s. Acceptable methods: SUM, MAX, MAX-CLIQUE, MAX-3SETS, MAX-4SETS", meth.c_str());
+      return(-1);
     }
       
-    if (!multiple.getValue()) {
+    //if (!multiple.getValue()) {
+    if (true) {
 
       // Read in groups from file
       std::string gfilename = groupsFilename.getValue();
@@ -198,7 +203,8 @@ int main(int argc, char** argv) {
 
       // Grab degree groups
       std::map<int, int> nodeDegreeGroups;
-      std::string dFileName = degree.getValue();
+      //std::string dFileName = degree.getValue();
+      std::string dFileName = "";
       if (dFileName == "") {
 	for (auto const& i : fullMap) {
 	  nodeDegreeGroups[i.second] = 0;
@@ -306,7 +312,8 @@ int main(int argc, char** argv) {
 	if (pIterations > 0) {
 	  // We need to calculate empirical p-values.
 	  // PValueModulesScorer will take ownership of the complete graph scorer.
-	  std::string dFileName = degree.getValue();
+	  //std::string dFileName = degree.getValue();
+	  std::string dFileName = "";
 	  if (dFileName == "") {
 	    for (auto const& i : fullMap) {
 	      nodeDegreeGroups[i.second] = 0;
